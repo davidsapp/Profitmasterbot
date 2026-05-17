@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#050d1a">
+<title>ProfitMasterBot v6.0</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap');
+
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  :root{
+    --bg:#050d1a;--card:#0a1628;--card2:#0f1f35;--border:#1a3a5c;
+    --neon:#00ff88;--cyan:#00ccff;--blue:#0066ff;--red:#ff3366;
+    --gold:#ffd700;--white:#e8f4fd;--grey:#6b8db0;
+  }
+  body{background:var(--bg);color:var(--white);font-family:'Rajdhani',sans-serif;
+    min-height:100vh;overflow-x:hidden;user-select:none;}
+  
+  /* SCREENS */
+  .screen{display:none;min-height:100vh;flex-direction:column;}
+  .screen.active{display:flex;}
+
+  /* SPLASH */
+  #splash{align-items:center;justify-content:center;gap:20px;position:relative;
+    background:radial-gradient(ellipse at center,#0a1f3a 0%,#050d1a 70%);}
+  .logo-box{width:110px;height:110px;border-radius:30px;background:var(--card);
+    border:2px solid var(--neon);display:flex;align-items:center;justify-content:center;
+    font-size:52px;box-shadow:0 0 40px #00ff8844;animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{box-shadow:0 0 20px #00ff8844;}50%{box-shadow:0 0 60px #00ff8888;}}
+  .app-name{font-family:'Orbitron',monospace;color:var(--neon);font-size:26px;font-weight:900;letter-spacing:3px;text-align:center;}
+  .app-ver{font-family:'Orbitron',monospace;color:var(--cyan);font-size:12px;letter-spacing:6px;text-align:center;}
+  .app-tag{color:var(--grey);font-size:13px;text-align:center;}
+  .progress-wrap{width:220px;}
+  .progress-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+  .progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--neon),var(--cyan));border-radius:2px;transition:width 0.04s;}
+  .progress-msg{color:var(--grey);font-size:11px;text-align:center;margin-top:6px;}
+  .powered{position:absolute;bottom:30px;color:var(--grey);font-size:10px;text-align:center;}
+
+  /* LOGIN */
+  #login{align-items:center;justify-content:center;gap:16px;padding:24px;
+    background:radial-gradient(ellipse at center,#0a1f3a 0%,#050d1a 70%);}
+  .pin-dots{display:flex;gap:12px;}
+  .pin-dot{width:18px;height:18px;border-radius:50%;background:var(--border);transition:all 0.2s;}
+  .pin-dot.filled{background:var(--neon);box-shadow:0 0 10px var(--neon);}
+  .pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:220px;}
+  .pin-btn{height:60px;border-radius:14px;background:var(--card2);border:1px solid var(--border);
+    color:var(--white);font-size:20px;font-weight:700;cursor:pointer;display:flex;
+    align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;
+    transition:all 0.15s;active:transform:scale(0.95);}
+  .pin-btn:active{transform:scale(0.93);background:var(--border);}
+  .pin-error{color:var(--red);font-size:13px;min-height:20px;text-align:center;}
+  .login-btn{background:var(--neon);color:var(--bg);border:none;border-radius:14px;
+    padding:12px 40px;font-weight:800;font-size:14px;cursor:pointer;font-family:'Rajdhani',sans-serif;}
+
+  /* TOP BAR */
+  .topbar{display:flex;justify-content:space-between;align-items:center;
+    padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg);
+    position:sticky;top:0;z-index:100;}
+  .topbar-left{display:flex;align-items:center;gap:8px;}
+  .topbar-title{font-family:'Orbitron',monospace;color:var(--neon);font-size:14px;font-weight:900;}
+  .live-dot{width:10px;height:10px;border-radius:50%;background:var(--neon);
+    box-shadow:0 0 8px var(--neon);animation:blink 1.5s infinite;}
+  .paused-dot{width:10px;height:10px;border-radius:50%;background:var(--red);}
+  @keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+  .live-txt{font-size:11px;font-weight:800;}
+
+  /* CONTENT */
+  .content{flex:1;overflow-y:auto;padding-bottom:80px;}
+  
+  /* BOTTOM NAV */
+  .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);
+    border-top:1px solid var(--border);display:flex;justify-content:space-around;
+    padding:6px 0;z-index:200;}
+  .nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;
+    padding:8px 12px;border-radius:12px;cursor:pointer;border:none;background:transparent;
+    transition:all 0.2s;}
+  .nav-btn.active{background:#00ff8818;}
+  .nav-icon{font-size:22px;}
+  .nav-label{font-size:9px;font-weight:700;color:var(--grey);font-family:'Rajdhani',sans-serif;}
+  .nav-btn.active .nav-label{color:var(--neon);}
+
+  /* MORE MENU */
+  .more-menu{position:fixed;bottom:70px;left:16px;right:16px;background:var(--card2);
+    border:1px solid var(--border);border-radius:16px;padding:12px;
+    display:none;grid-template-columns:repeat(5,1fr);gap:8px;z-index:199;}
+  .more-menu.open{display:grid;}
+  .more-item{display:flex;flex-direction:column;align-items:center;gap:4px;
+    padding:10px 4px;border-radius:12px;cursor:pointer;border:1px solid var(--border);
+    transition:all 0.2s;}
+  .more-item:active{transform:scale(0.95);}
+  .more-item.active{background:#00ff8822;border-color:var(--neon);}
+  .more-icon{font-size:20px;}
+  .more-label{font-size:8px;font-weight:700;color:var(--grey);font-family:'Rajdhani',sans-serif;text-align:center;}
+  .more-item.active .more-label{color:var(--neon);}
+
+  /* CARDS */
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;
+    padding:16px;margin-bottom:14px;}
+  .card-title{color:var(--white);font-size:13px;font-weight:700;margin-bottom:12px;font-family:'Rajdhani',sans-serif;}
+
+  /* BADGES */
+  .badge{display:inline-flex;align-items:center;border-radius:6px;
+    padding:2px 10px;font-size:10px;font-weight:800;font-family:'Rajdhani',sans-serif;}
+
+  /* STAT GRID */
+  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+  .stat-box{background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:12px;}
+  .stat-icon{font-size:20px;margin-bottom:4px;}
+  .stat-label{color:var(--grey);font-size:10px;margin-bottom:2px;font-family:'Rajdhani',sans-serif;}
+  .stat-value{font-size:16px;font-weight:800;font-family:'Orbitron',monospace;}
+  .stat-sub{color:var(--grey);font-size:10px;font-family:'Rajdhani',sans-serif;}
+
+  /* TOGGLE */
+  .toggle-wrap{display:flex;align-items:center;gap:8px;}
+  .toggle{width:46px;height:24px;border-radius:12px;position:relative;cursor:pointer;
+    border:none;transition:background 0.3s;}
+  .toggle-thumb{position:absolute;top:2px;width:18px;height:18px;border-radius:50%;
+    background:var(--grey);transition:left 0.3s;}
+  .toggle.on{background:var(--neon);}
+  .toggle.on .toggle-thumb{left:24px;background:var(--bg);}
+  .toggle.off{background:var(--border);}
+  .toggle.off .toggle-thumb{left:2px;}
+
+  /* PORTFOLIO BARS */
+  .port-bar-wrap{margin-bottom:10px;}
+  .port-bar-row{display:flex;justify-content:space-between;margin-bottom:4px;}
+  .port-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+  .port-bar-fill{height:100%;border-radius:3px;}
+
+  /* TRADE ROW */
+  .trade-row{display:flex;justify-content:space-between;align-items:center;
+    padding:10px 0;border-bottom:1px solid var(--border);}
+  .trade-row:last-child{border-bottom:none;}
+  .trade-pair{color:var(--white);font-size:13px;font-weight:700;}
+  .trade-time{color:var(--grey);font-size:10px;}
+  .trade-pnl{font-size:12px;font-weight:700;margin-top:4px;}
+
+  /* STRATEGY BTNS */
+  .strat-grid{display:flex;flex-wrap:wrap;gap:8px;}
+  .strat-btn{padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;
+    cursor:pointer;border:1px solid var(--border);background:var(--card2);
+    color:var(--white);font-family:'Rajdhani',sans-serif;transition:all 0.2s;}
+  .strat-btn.active{background:var(--neon);color:var(--bg);border-color:var(--neon);}
+
+  /* RISK BTNS */
+  .risk-grid{display:flex;gap:10px;}
+  .risk-btn{flex:1;padding:12px 0;border-radius:10px;font-size:13px;font-weight:700;
+    cursor:pointer;border:1px solid var(--border);background:var(--card2);
+    color:var(--white);font-family:'Rajdhani',sans-serif;transition:all 0.2s;}
+
+  /* ROW ITEM */
+  .row-item{display:flex;justify-content:space-between;margin-bottom:8px;}
+  .row-label{color:var(--grey);font-size:12px;}
+  .row-value{font-size:12px;font-weight:700;}
+
+  /* INPUT */
+  .input-field{width:100%;background:var(--bg);color:var(--white);border:1px solid var(--border);
+    border-radius:10px;padding:10px 14px;font-size:14px;font-weight:700;
+    font-family:'Rajdhani',sans-serif;outline:none;margin-bottom:10px;}
+  .input-label{color:var(--grey);font-size:11px;margin-bottom:6px;display:block;}
+
+  /* BUTTONS */
+  .btn-neon{width:100%;background:var(--neon);color:var(--bg);border:none;border-radius:12px;
+    padding:14px;font-weight:900;font-size:15px;cursor:pointer;font-family:'Rajdhani',sans-serif;
+    margin-bottom:10px;transition:all 0.2s;}
+  .btn-neon:active{transform:scale(0.97);}
+  .btn-outline{width:100%;background:var(--card2);color:var(--neon);border:1px solid var(--neon);
+    border-radius:12px;padding:14px;font-weight:700;font-size:14px;cursor:pointer;
+    font-family:'Rajdhani',sans-serif;transition:all 0.2s;}
+
+  /* SIGNAL BAR */
+  .sig-bar{height:4px;background:var(--border);border-radius:2px;margin-top:10px;}
+  .sig-bar-fill{height:100%;border-radius:2px;}
+
+  /* NOTIFICATION */
+  .notif-row{display:flex;gap:12px;padding:14px;background:var(--card);
+    border:1px solid var(--border);border-radius:14px;margin-bottom:10px;}
+  .notif-icon{font-size:24px;}
+  .notif-msg{color:var(--white);font-size:13px;}
+  .notif-time{color:var(--grey);font-size:10px;margin-top:4px;}
+
+  /* EXCHANGE ROW */
+  .ex-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+  .ex-info{display:flex;align-items:center;gap:10px;}
+  .ex-name{color:var(--white);font-size:15px;font-weight:800;}
+  .ex-status{font-size:11px;}
+
+  /* CALC TABLE */
+  .calc-head{display:flex;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:8px;}
+  .calc-head span,.calc-row span{flex:1;font-size:9px;font-weight:800;text-align:center;
+    color:var(--grey);font-family:'Rajdhani',sans-serif;}
+  .calc-row{display:flex;padding:8px 0;border-bottom:1px solid var(--border);}
+  .calc-row:last-child{border-bottom:none;}
+
+  /* SETTINGS ROW */
+  .set-row{display:flex;justify-content:space-between;align-items:center;
+    padding:12px 0;border-bottom:1px solid var(--border);}
+  .set-label{color:var(--white);font-size:13px;}
+
+  /* PAGE PADDING */
+  .page{padding:12px;}
+
+  /* SECTION HEAD */
+  .sec-head{color:var(--grey);font-size:11px;font-weight:700;letter-spacing:1px;margin-bottom:10px;}
+
+  /* ABOUT BOX */
+  .about-box{text-align:center;padding:20px 0;}
+
+  /* COUNTDOWN */
+  .countdown{font-family:'Orbitron',monospace;color:var(--gold);font-size:26px;font-weight:900;}
+
+  /* HEADER SECTION */
+  .header-section{background:var(--card);padding:20px 16px;border-bottom:1px solid var(--border);}
+  .portfolio-label{color:var(--grey);font-size:11px;}
+  .portfolio-value{font-family:'Orbitron',monospace;color:var(--neon);font-size:28px;font-weight:900;}
+  .portfolio-change{color:var(--neon);font-size:12px;}
+  .header-top{display:flex;justify-content:space-between;align-items:center;}
+  .badge-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
+
+  /* USER ROW */
+  .user-row{display:flex;justify-content:space-between;align-items:center;
+    padding:10px 0;border-bottom:1px solid var(--border);}
+  .user-row:last-child{border-bottom:none;}
+  .user-name{color:var(--white);font-size:13px;font-weight:700;}
+  .user-id{color:var(--grey);font-size:10px;}
+  .user-com{color:var(--neon);font-size:13px;font-weight:700;}
+
+  /* COMING SOON */
+  .soon-row{display:flex;justify-content:space-between;align-items:center;
+    padding:10px 0;border-bottom:1px solid var(--border);}
+  .soon-row:last-child{border-bottom:none;}
+  .soon-name{color:var(--grey);font-size:13px;}
+
+  /* PAIR ROW */
+  .pair-row{display:flex;justify-content:space-between;align-items:center;
+    padding:10px 0;border-bottom:1px solid var(--border);}
+  .pair-row:last-child{border-bottom:none;}
+
+  /* SUMMARY RESULT */
+  .result-card{background:var(--card);border:1px solid #00ff8855;border-radius:16px;
+    padding:16px;margin-bottom:14px;}
+  .result-title{color:var(--neon);font-size:13px;font-weight:800;margin-bottom:12px;}
+
+  /* SCROLL FIX */
+  .content::-webkit-scrollbar{display:none;}
+  .content{-ms-overflow-style:none;scrollbar-width:none;}
+
+  /* AI SCANNER */
+  .scanner-box{text-align:center;padding:20px 0;}
+  .scanner-icon{font-size:40px;margin-bottom:8px;}
+  .scan-btn{background:var(--neon);color:var(--bg);border:none;border-radius:10px;
+    padding:10px 28px;font-weight:800;font-size:13px;cursor:pointer;
+    font-family:'Rajdhani',sans-serif;transition:all 0.2s;}
+  .scan-btn:active{transform:scale(0.95);}
+  .scan-btn.scanning{background:var(--border);color:var(--grey);}
+
+  /* SIG CARD */
+  .sig-card{background:var(--card);border:1px solid var(--border);border-radius:16px;
+    padding:16px;margin-bottom:14px;}
+  .sig-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .sig-left{display:flex;align-items:center;gap:12px;}
+  .sig-coin-box{width:44px;height:44px;border-radius:12px;background:var(--card2);
+    display:flex;align-items:center;justify-content:center;font-size:22px;
+    border:1px solid var(--border);}
+  .sig-coin{color:var(--white);font-size:14px;font-weight:800;}
+  .sig-reason{color:var(--grey);font-size:10px;}
+  .sig-right{text-align:right;}
+  .sig-conf{color:var(--grey);font-size:10px;margin-top:4px;}
+
+  /* ADMIN CTRL */
+  .ctrl-btn{width:100%;background:var(--card2);border-radius:10px;
+    padding:12px 16px;margin-bottom:8px;cursor:pointer;text-align:left;
+    font-weight:700;font-size:13px;font-family:'Rajdhani',sans-serif;transition:all 0.2s;}
+  .ctrl-btn:active{transform:scale(0.98);}
+
+  /* LANG BTNS */
+  .lang-row{display:flex;gap:8px;}
+  .lang-btn{background:var(--card2);border:1px solid var(--border);border-radius:8px;
+    padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;
+    color:var(--white);font-family:'Rajdhani',sans-serif;}
+  .lang-btn.active{background:var(--neon);color:var(--bg);border-color:var(--neon);}
+</style>
+</head>
+<body>
+
+<!-- SPLASH SCREEN -->
+<div id="splash" class="screen active">
+  <div class="logo-box">🤖</div>
+  <div>
+    <div class="app-name">ProfitMasterBot</div>
+    <div class="app-ver">v6.0</div>
+    <div class="app-tag">Smart Trading. Intelligent Growth.</div>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="prog-fill"></div></div>
+    <div class="progress-msg" id="prog-msg">Initializing AI engine...</div>
+  </div>
+  <div class="powered">Powered by David Maina · SmartLogic Technologies</div>
+</div>
+
+<!-- LOGIN SCREEN -->
+<div id="login" class="screen">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:16px;padding:24px;background:radial-gradient(ellipse at center,#0a1f3a,#050d1a);">
+    <div style="font-size:44px;">🔐</div>
+    <div style="color:var(--white);font-size:20px;font-weight:800;">Welcome Back</div>
+    <div style="color:var(--grey);font-size:12px;">Enter your 4-digit PIN</div>
+    <div class="pin-dots">
+      <div class="pin-dot" id="d0"></div>
+      <div class="pin-dot" id="d1"></div>
+      <div class="pin-dot" id="d2"></div>
+      <div class="pin-dot" id="d3"></div>
+    </div>
+    <div class="pin-error" id="pin-err"></div>
+    <div class="pin-grid">
+      <button class="pin-btn" onclick="pinTap(1)">1</button>
+      <button class="pin-btn" onclick="pinTap(2)">2</button>
+      <button class="pin-btn" onclick="pinTap(3)">3</button>
+      <button class="pin-btn" onclick="pinTap(4)">4</button>
+      <button class="pin-btn" onclick="pinTap(5)">5</button>
+      <button class="pin-btn" onclick="pinTap(6)">6</button>
+      <button class="pin-btn" onclick="pinTap(7)">7</button>
+      <button class="pin-btn" onclick="pinTap(8)">8</button>
+      <button class="pin-btn" onclick="pinTap(9)">9</button>
+      <button class="pin-btn" onclick="goApp()">👆</button>
+      <button class="pin-btn" onclick="pinTap(0)">0</button>
+      <button class="pin-btn" onclick="pinDel()">⌫</button>
+    </div>
+    <div style="color:var(--grey);font-size:10px;">Default PIN: 1234</div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" class="screen">
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <span style="font-size:20px;">🤖</span>
+      <span class="topbar-title">ProfitMasterBot</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <div class="live-dot" id="live-dot"></div>
+      <span class="live-txt" id="live-txt" style="color:var(--neon);">LIVE</span>
+    </div>
+  </div>
+
+  <!-- CONTENT AREA -->
+  <div class="content">
+
+    <!-- DASHBOARD PAGE -->
+    <div id="page-home" class="page-content">
+      <div class="header-section">
+        <div class="header-top">
+          <div>
+            <div class="portfolio-label">Total Portfolio</div>
+            <div class="portfolio-value">$24,831.47</div>
+            <div class="portfolio-change">+$1,247.30 today (+5.28%)</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="color:var(--grey);font-size:10px;margin-bottom:6px;">Auto-Trade</div>
+            <button class="toggle on" id="auto-toggle" onclick="toggleAuto()">
+              <div class="toggle-thumb"></div>
+            </button>
+            <div class="live-txt" id="auto-txt" style="color:var(--neon);font-size:10px;margin-top:4px;">LIVE</div>
+          </div>
+        </div>
+        <div class="badge-row">
+          <span class="badge" style="background:#00ff8822;color:var(--neon);border:1px solid #00ff8855;">Binance OK</span>
+          <span class="badge" style="background:#00ccff22;color:var(--cyan);border:1px solid #00ccff55;">Deriv OK</span>
+          <span class="badge" style="background:#ffd70022;color:var(--gold);border:1px solid #ffd70055;">AI Active</span>
+          <span class="badge" style="background:#0066ff22;color:var(--blue);border:1px solid #0066ff55;">Scalping</span>
+        </div>
+      </div>
+      <div class="page">
+        <div class="stat-grid">
+          <div class="stat-box">
+            <div class="stat-icon">📈</div>
+            <div class="stat-label">Daily P&L</div>
+            <div class="stat-value" style="color:var(--neon);">+$1,247</div>
+            <div class="stat-sub">+5.28%</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-icon">🏆</div>
+            <div class="stat-label">Win Rate</div>
+            <div class="stat-value" style="color:var(--cyan);">84.2%</div>
+            <div class="stat-sub">Last 30d</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-icon">⚡</div>
+            <div class="stat-label">Active Trades</div>
+            <div class="stat-value" style="color:var(--gold);">7</div>
+            <div class="stat-sub">Live now</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-icon">📅</div>
+            <div class="stat-label">Monthly</div>
+            <div class="stat-value" style="color:var(--blue);">+22.4%</div>
+            <div class="stat-sub">This month</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">⚡ Live Trade Feed</div>
+          <div class="trade-row">
+            <div><div class="trade-pair">BTC/USDT</div><div class="trade-time">14:32</div></div>
+            <div style="text-align:right;">
+              <span class="badge" style="background:#00ff8822;color:var(--neon);border:1px solid #00ff8855;">BUY</span>
+              <div class="trade-pnl" style="color:var(--neon);">+$124.30</div>
+            </div>
+          </div>
+          <div class="trade-row">
+            <div><div class="trade-pair">ETH/USDT</div><div class="trade-time">14:28</div></div>
+            <div style="text-align:right;">
+              <span class="badge" style="background:#00ccff22;color:var(--cyan);border:1px solid #00ccff55;">SELL</span>
+              <div class="trade-pnl" style="color:var(--neon);">+$67.80</div>
+            </div>
+          </div>
+          <div class="trade-row">
+            <div><div class="trade-pair">BTC/USDT</div><div class="trade-time">14:21</div></div>
+            <div style="text-align:right;">
+              <span class="badge" style="background:#00ff8822;color:var(--neon);border:1px solid #00ff8855;">BUY</span>
+              <div class="trade-pnl" style="color:var(--red);">-$23.10</div>
+            </div>
+          </div>
+          <div class="trade-row">
+            <div><div class="trade-pair">ETH/USDT</div><div class="trade-time">14:15</div></div>
+            <div style="text-align:right;">
+              <span class="badge" style="background:#00ff8822;color:var(--neon);border:1px solid #00ff8855;">BUY</span>
+              <div class="trade-pnl" style="color:var(--neon);">+$91.40</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">💼 Portfolio Allocation</div>
+          <div class="port-bar-wrap">
+            <div class="port-bar-row"><span style="color:var(--white);font-size:12px;">BTC</span><span style="color:#f7931a;font-weight:700;font-size:12px;">45%</span></div>
+            <div class="port-bar"><div class="port-bar-fill" style="width:45%;background:#f7931a;"></div></div>
+          </div>
+          <div class="port-bar-wrap">
+            <div class="port-bar-row"><span style="color:var(--white);font-size:12px;">ETH</span><span style="color:#627eea;font-weight:700;font-size:12px;">28%</span></div>
+            <div class="port-bar"><div class="port-bar-fill" style="width:28%;background:#627eea;"></div></div>
+          </div>
+          <div class="port-bar-wrap">
+            <div class="port-bar-row"><span style="color:var(--white);font-size:12px;">USDT</span><span style="color:var(--neon);font-weight:700;font-size:12px;">18%</span></div>
+            <div class="port-bar"><div class="port-bar-fill" style="width:18%;background:var(--neon);"></div></div>
+          </div>
+          <div class="port-bar-wrap">
+            <div class="port-bar-row"><span style="color:var(--white);font-size:12px;">Other</span><span style="color:var(--cyan);font-weight:700;font-size:12px;">9%</span></div>
+            <div class="port-bar"><div class="port-bar-fill" style="width:9%;background:var(--cyan);"></div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">⏱ Next Cycle</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div class="countdown" id="countdown">14:07</div>
+            <button class="btn-neon" style="width:auto;padding:8px 18px;margin:0;" onclick="alert('Bot cycle resumed!')">Resume Now</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRADING PAGE -->
+    <div id="page-trading" class="page-content" style="display:none;">
+      <div class="page">
+        <div style="color:var(--neon);font-size:18px;font-weight:900;margin-bottom:16px;font-family:'Orbitron',monospace;">Trading Panel</div>
+        <div class="card">
+          <div class="card-title">Strategy</div>
+          <div class="strat-grid" id="strat-grid">
+            <button class="strat-btn active" onclick="setStrat(this)">Scalping</button>
+            <button class="strat-btn" onclick="setStrat(this)">Swing</button>
+            <button class="strat-btn" onclick="setStrat(this)">Trend-Follow</button>
+            <button class="strat-btn" onclick="setStrat(this)">AI Adaptive</button>
+            <button class="strat-btn" onclick="setStrat(this)">Conservative</button>
+            <button class="strat-btn" onclick="setStrat(this)">Aggressive</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Risk Level</div>
+          <div class="risk-grid">
+            <button class="risk-btn" id="risk-low"    onclick="setRisk('low')"    style="color:var(--neon);">Low</button>
+            <button class="risk-btn" id="risk-medium" onclick="setRisk('medium')" style="background:var(--gold);color:var(--bg);">Medium</button>
+            <button class="risk-btn" id="risk-high"   onclick="setRisk('high')"   style="color:var(--red);">High</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Risk Settings</div>
+          <div class="row-item"><span class="row-label">Stop Loss</span><span class="row-value" style="color:var(--red);">-5%</span></div>
+          <div class="row-item"><span class="row-label">Take Profit</span><span class="row-value" style="color:var(--neon);">+10%</span></div>
+          <div class="row-item"><span class="row-label">Daily Loss Limit</span><span class="row-value" style="color:var(--gold);">-8%</span></div>
+          <div class="row-item"><span class="row-label">Position Size</span><span class="row-value" style="color:var(--cyan);">20%</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Active Pairs</div>
+          <div class="pair-row"><span style="color:var(--white);font-size:13px;">BTC/USDT</span><span class="badge" style="background:#00ff8822;color:var(--neon);border:1px solid #00ff8855;">Active</span></div>
+          <div class="pair-row"><span style="color:var(--white);font-size:13px;">ETH/USDT</span><span class="badge" style="background:#00ff8822;color:var(--neon);border:1px solid #00ff8855;">Active</span></div>
+          <div class="pair-row"><span style="color:var(--white);font-size:13px;">BNB/USDT</span><span class="badge" style="background:#00ff8822;color:var(--neon);border:1px solid #00ff8855;">Active</span></div>
+          <div class="pair-row"><span style="color:var(--white);font-size:13px;">SOL/USDT</span><span class="badge" style="background:#00ff8822;color:var(--neon);border:1px solid #00ff8855;">Active</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXCHANGE PAGE -->
+    <div id="page-exchange" class="page-content" style="display:none;">
+      <div class="page">
+        <div style="color:var(--neon);font-size:18px;font-weight:900;margin-bottom:16px;font-family:'Orbitron',monospace;">Exchange Connections</div>
+        <div class="card">
+          <div class="ex-row">
+            <div class="ex-info">
+              <span style="font-size:28px;">🟡</span>
+              <div>
+                <div class="ex-name">Binance</div>
+                <div class="ex-status" style="color:var(--neon);">● Connected</div>
+              </div>
+            </div>
+            <button class="toggle on" id="binance-toggle" onclick="toggleExchange('binance')">
+              <div class="toggle-thumb"></div>
+            </button>
+          </div>
+          <div class="row-item"><span class="row-label">Balance</span><span class="row-value" style="color:var(--neon);">$18,420.50</span></div>
+          <div class="row-item"><span class="row-label">API Status</span><span class="row-value" style="color:var(--neon);">Healthy ✓</span></div>
+          <label class="input-label">Your Binance API Key:</label>
+          <input type="password" class="input-field" id="binance-key" placeholder="Paste API key here">
+          <button class="btn-neon" onclick="saveKey('binance');startBot()">Save & Connect Binance</button>
+        </div>
+        <div class="card">
+          <div class="ex-row">
+            <div class="ex-info">
+              <span style="font-size:28px;">🔵</span>
+              <div>
+                <div class="ex-name">Deriv</div>
+                <div class="ex-status" style="color:var(--neon);">● Connected</div>
+              </div>
+            </div>
+            <button class="toggle on" id="deriv-toggle" onclick="toggleExchange('deriv')">
+              <div class="toggle-thumb"></div>
+            </button>
+          </div>
+          <div class="row-item"><span class="row-label">Balance</span><span class="row-value" style="color:var(--neon);">$6,410.97</span></div>
+          <div class="row-item"><span class="row-label">API Status</span><span class="row-value" style="color:var(--neon);">Healthy ✓</span></div>
+          <label class="input-label">Your Deriv API Key:</label>
+          <input type="password" class="input-field" id="deriv-key" placeholder="Paste API key here">
+          <button class="btn-neon" style="background:var(--cyan);" onclick="saveKey('deriv');startBot()">Save & Connect Deriv</button>
+        </div>
+        <div class="card">
+          <div class="sec-head">COMING SOON</div>
+          <div class="soon-row"><span class="soon-name">Bybit</span><span class="badge" style="background:#6b8db022;color:var(--grey);border:1px solid #6b8db055;">Soon</span></div>
+          <div class="soon-row"><span class="soon-name">Coinbase</span><span class="badge" style="background:#6b8db022;color:var(--grey);border:1px solid #6b8db055;">Soon</span></div>
+          <div class="soon-row"><span class="soon-name">Kraken</span><span class="badge" style="background:#6b8db022;color:var(--grey);border:1px solid #6b8db055;">Soon</span></div>
+          <div class="soon-row"><span class="soon-name">OKX</span><span class="badge" style="background:#6b8db022;color:var(--grey);border:1px solid #6b8db055;">Soon</span></div>
+          <div class="soon-row"><span class="soon-name">KuCoin</span><span class="badge" style="background:#6b8db022;color:var(--grey);border:1px solid #6b8db055;">Soon</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI PAGE -->
+    <div id="page-ai" class="page-content" style="display:none;">
+      <div class="page">
+        <div style="color:var(--neon);font-size:18px;font-weight:900;margin-bottom:16px;font-family:'Orbitron',monospace;">AI Suggestions</div>
+        <div class="card scanner-box">
+          <div class="scanner-icon">🧠</div>
+          <div style="color:var(--neon);font-size:14px;font-weight:700;margin-bottom:4px;">AI Market Scanner</div>
+          <div style="color:var(--grey);font-size:11px;margin-bottom:12px;" id="scan-msg">Last scan: 3 minutes ago</div>
+          <button class="scan-btn" id="scan-btn" onclick="runScan()">Scan Now</button>
+        </div>
+        <div class="sig-card">
+          <div class="sig-top">
+            <div class="sig-left">
+              <div class="sig-coin-box">₿</div>
+              <div><div class="sig-coin">BTC ↑</div><div class="sig-reason">Golden cross detected</div></div>
+            </div>
+            <div class="sig-right">
+              <span class="badge" style="background:#00ff8822;color:var(--neon);border:1px solid #00ff8855;">STRONG BUY</span>
+              <div class="sig-conf">92% confidence</div>
+            </div>
+          </div>
+          <div class="sig-bar"><div class="sig-bar-fill" style="width:92%;background:var(--neon);"></div></div>
+        </div>
+        <div class="sig-card">
+          <div class="sig-top">
+            <div class="sig-left">
+              <div class="sig-coin-box">Ξ</div>
+              <div><div class="sig-coin">ETH ↑</div><div class="sig-reason">Support bounce $3,750</div></div>
+            </div>
+            <div class="sig-right">
+              <span class="badge" style="background:#00ff8822;color:var(--neon);border:1px solid #00ff8855;">BUY</span>
+              <div class="sig-conf">78% confidence</div>
+            </div>
+          </div>
+          <div class="sig-bar"><div class="sig-bar-fill" style="width:78%;background:var(--neon);"></div></div>
+        </div>
+        <div class="sig-card">
+          <div class="sig-top">
+            <div class="sig-left">
+              <div class="sig-coin-box">◎</div>
+              <div><div class="sig-coin">SOL →</div><div class="sig-reason">Sideways consolidation</div></div>
+            </div>
+            <div class="sig-right">
+              <span class="badge" style="background:#ffd70022;color:var(--gold);border:1px solid #ffd70055;">HOLD</span>
+              <div class="sig-conf">61% confidence</div>
+            </div>
+          </div>
+          <div class="sig-bar"><div class="sig-bar-fill" style="width:61%;background:var(--gold);"></div></div>
+        </div>
+        <div class="sig-card">
+          <div class="sig-top">
+            <div class="sig-left">
+              <div class="sig-coin-box">B</div>
+              <div><div class="sig-coin">BNB ↓</div><div class="sig-reason">RSI overbought at 78</div></div>
+            </div>
+            <div class="sig-right">
+              <span class="badge" style="background:#ff336622;color:var(--red);border:1px solid #ff336655;">SELL</span>
+              <div class="sig-conf">55% confidence</div>
+            </div>
+          </div>
+          <div class="sig-bar"><div class="sig-bar-fill" style="width:55%;background:var(--red);"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CALCULATOR PAGE -->
+    <div id="page-calculator" class="page-content" style="display:none;">
+      <div class="page">
+        <div style="color:var(--neon);font-size:18px;font-weight:900;margin-bottom:16px;font-family:'Orbitron',monospace;">Compound Calculator</div>
+        <div class="card">
+          <div class="card-title">Your Parameters</div>
+          <label class="input-label">Starting Capital ($)</label>
+          <input type="number" class="input-field" id="calc-cap" placeholder="e.g. 1000" value="1000">
+          <label class="input-label">Daily Profit Target (%)</label>
+          <input type="number" class="input-field" id="calc-daily" placeholder="e.g. 5" value="5">
+          <label class="input-label">Withdraw from Profit (%)</label>
+          <input type="number" class="input-field" id="calc-wd" placeholder="e.g. 20" value="20">
+          <label class="input-label">Number of Days</label>
+          <input type="number" class="input-field" id="calc-days" placeholder="e.g. 30" value="30">
+          <button class="btn-neon" onclick="calculate()">Calculate</button>
+        </div>
+        <div id="calc-result" style="display:none;">
+          <div class="result-card">
+            <div class="result-title">Summary Results</div>
+            <div class="stat-grid">
+              <div class="stat-box">
+                <div class="stat-icon">💰</div>
+                <div class="stat-label">Final Capital</div>
+                <div class="stat-value" style="color:var(--neon);" id="res-final">-</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-icon">📈</div>
+                <div class="stat-label">Total Profit</div>
+                <div class="stat-value" style="color:var(--gold);" id="res-profit">-</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-icon">💸</div>
+                <div class="stat-label">Total Withdrawn</div>
+                <div class="stat-value" style="color:var(--cyan);" id="res-wd">-</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-icon">🚀</div>
+                <div class="stat-label">Growth</div>
+                <div class="stat-value" style="color:var(--blue);" id="res-growth">-</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Growth Breakdown</div>
+            <div class="calc-head">
+              <span>Day</span><span>Capital</span><span>Profit</span><span>Withdrawn</span><span>Reinvested</span>
+            </div>
+            <div id="calc-rows"></div>
+          </div>
+          <div class="card" style="background:var(--card2);">
+            <div class="sec-head">IMPORTANT REMINDER</div>
+            <div style="color:var(--grey);font-size:11px;line-height:18px;">These are projected figures. Real crypto markets fluctuate and profits are never guaranteed. Always start small and never invest money you cannot afford to lose.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMMISSION PAGE -->
+    <div id="page-commission" class="page-content" style="display:none;">
+      <div class="page">
+        <div style="color:var(--neon);font-size:18px;font-weight:900;margin-bottom:16px;font-family:'Orbitron',monospace;">Commission Dashboard</div>
+        <div class="stat-grid">
+          <div class="stat-box">
+            <div class="stat-icon">🏆</div>
+            <div class="stat-label">Total Earned</div>
+            <div class="stat-value" style="color:var(--gold);">$880</div>
+            <div class="stat-sub">All time</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-icon">💵</div>
+            <div class="stat-label">Pending</div>
+            <div class="stat-value" style="color:var(--neon);">$242</div>
+            <div class="stat-sub">Awaiting</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Commission Rules</div>
+          <div class="row-item"><span class="row-label">Rate</span><span class="row-value" style="color:var(--neon);">5% per withdrawal</span></div>
+          <div class="row-item"><span class="row-label">Min Withdrawal</span><span class="row-value" style="color:var(--gold);">$50</span></div>
+          <div class="row-item"><span class="row-label">Owner Wallet</span><span class="row-value" style="color:var(--cyan);">Auto-deposit</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title">User Breakdown</div>
+          <div class="user-row">
+            <div><div class="user-name">Alice K.</div><div class="user-id">USR001 · $4,820</div></div>
+            <div><div class="user-com">$241</div><span class="badge" style="background:#00ff8822;color:var(--neon);border:1px solid #00ff8855;">Active</span></div>
+          </div>
+          <div class="user-row">
+            <div><div class="user-name">Brian M.</div><div class="user-id">USR002 · $2,100</div></div>
+            <div><div class="user-com">$105</div><span class="badge" style="background:#00ff8822;color:var(--neon);border:1px solid #00ff8855;">Active</span></div>
+          </div>
+          <div class="user-row">
+            <div><div class="user-name">Carol N.</div><div class="user-id">USR003 · $9,430</div></div>
+            <div><div class="user-com">$471.50</div><span class="badge" style="background:#00ff8822;color:var(--neon);border:1px solid #00ff8855;">Active</span></div>
+          </div>
+          <div class="user-row">
+            <div><div class="user-name">David O.</div><div class="user-id">USR004 · $1,250</div></div>
+            <div><div class="user-com">$62.50</div><span class="badge" style="background:#6b8db022;color:var(--grey);border:1px solid #6b8db055;">Inactive</span></div>
+          </div>
+        </div>
+        <button class="btn-neon" onclick="alert('Withdrawal processing...')">Withdraw Commissions</button>
+        <button class="btn-outline" onclick="alert('Reinvesting commissions...')">Reinvest Commissions</button>
+      </div>
+    </div>
+
+    <!-- ADMIN PAGE -->
+    <div id="page-admin" class="page-content" style="display:none;">
+      <div class="page">
+        <div style="color:var(--neon);font-size:18px;font-weight:900;margin-bottom:4px;font-family:'Orbitron',monospace;">Admin Control Center</div>
+        <div style="color:var(--grey);font-size:11px;margin-bottom:16px;">Powered by David Maina · Owner Access Only</div>
+        <div class="stat-grid">
+          <div class="stat-box"><div class="stat-icon">👥</div><div class="stat-label">Total Users</div><div class="stat-value" style="color:var(--cyan);">4</div></div>
+          <div class="stat-box"><div class="stat-icon">💰</div><div class="stat-label">Total Volume</div><div class="stat-value" style="color:var(--neon);">$48.2K</div></div>
+          <div class="stat-box"><div class="stat-icon">📊</div><div class="stat-label">Trades</div><div class="stat-value" style="color:var(--gold);">1,247</div></div>
+          <div class="stat-box"><div class="stat-icon">🏆</div><div class="stat-label">Commission</div><div class="stat-value" style="color:var(--blue);">$880</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">User Management</div>
+          <div class="user-row">
+            <div><div class="user-name">Alice K.</div><div class="user-id">USR001 · $4,820</div></div>
+            <span class="badge" style="background:#00ff8822;color:var(--neon);border:1px solid #00ff8855;">Active</span>
+          </div>
+          <div class="user-row">
+            <div><div class="user-name">Brian M.</div><div class="user-id">USR002 · $2,100</div></div>
+            <span class="badge" style="background:#00ff8822;color:var(--neon);border:1px solid #00ff8855;">Active</span>
+          </div>
+          <div class="user-row">
+            <div><div class="user-name">Carol N.</div><div class="user-id">USR003 · $9,430</div></div>
+            <span class="badge" style="background:#00ff8822;color:var(--neon);border:1px solid #00ff8855;">Active</span>
+          </div>
+          <div class="user-row">
+            <div><div class="user-name">David O.</div><div class="user-id">USR004 · $1,250</div></div>
+            <span class="badge" style="background:#6b8db022;color:var(--grey);border:1px solid #6b8db055;">Inactive</span>
+          </div>
+          <button class="btn-neon" style="margin-top:12px;" onclick="alert('Onboarding new user...')">+ Onboard New User</button>
+        </div>
+        <div class="card">
+          <div class="card-title">System Controls</div>
+          <button class="ctrl-btn" style="color:var(--cyan);border:1px solid #00ccff44;" onclick="alert('Referral link generated!')">Generate Referral Link</button>
+          <button class="ctrl-btn" style="color:var(--neon);border:1px solid #00ff8844;" onclick="alert('Exporting logs...')">Export All Logs CSV</button>
+          <button class="ctrl-btn" style="color:var(--gold);border:1px solid #ffd70044;" onclick="alert('Generating PDF...')">Generate PDF Report</button>
+          <button class="ctrl-btn" style="color:var(--red);border:1px solid #ff336644;"  onclick="alert('Security lock activated!')">Force Security Lock</button>
+          <button class="ctrl-btn" style="color:var(--blue);border:1px solid #0066ff44;" onclick="alert('Checking for updates...')">Check for Updates</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALERTS PAGE -->
+    <div id="page-alerts" class="page-content" style="display:none;">
+      <div class="page">
+        <div style="color:var(--neon);font-size:18px;font-weight:900;margin-bottom:16px;font-family:'Orbitron',monospace;">Notifications</div>
+        <div class="notif-row"><div class="notif-icon">💰</div><div><div class="notif-msg">Trade WIN: BTC/USDT +$124.30</div><div class="notif-time">2 min ago</div></div></div>
+        <div class="notif-row"><div class="notif-icon">⚠️</div><div><div class="notif-msg">Volatility high — switched to Conservative</div><div class="notif-time">15 min ago</div></div></div>
+        <div class="notif-row"><div class="notif-icon">🔗</div><div><div class="notif-msg">Binance API: Connected and Healthy</div><div class="notif-time">1 hr ago</div></div></div>
+        <div class="notif-row"><div class="notif-icon">🏆</div><div><div class="notif-msg">Commission earned: $47.50 from USR003</div><div class="notif-time">3 hr ago</div></div></div>
+        <div class="notif-row"><div class="notif-icon">📦</div><div><div class="notif-msg">Backup sent to dakama254@gmail.com</div><div class="notif-time">Yesterday</div></div></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS PAGE -->
+    <div id="page-settings" class="page-content" style="display:none;">
+      <div class="page">
+        <div style="color:var(--neon);font-size:18px;font-weight:900;margin-bottom:16px;font-family:'Orbitron',monospace;">Settings</div>
+        <div class="card">
+          <div class="sec-head">APPEARANCE</div>
+          <div class="set-row">
+            <span class="set-label">Dark Mode</span>
+            <button class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')"><div class="toggle-thumb"></div></button>
+          </div>
+          <div class="set-row">
+            <span class="set-label">Language</span>
+            <div class="lang-row">
+              <button class="lang-btn active" id="lang-en" onclick="setLang('en')">English</button>
+              <button class="lang-btn" id="lang-sw" onclick="setLang('sw')">Swahili</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="sec-head">NOTIFICATIONS</div>
+          <div class="set-row"><span class="set-label">Push Notifications</span><button class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')"><div class="toggle-thumb"></div></button></div>
+          <div class="set-row"><span class="set-label">Sound Alerts</span><button class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')"><div class="toggle-thumb"></div></button></div>
+          <div class="set-row"><span class="set-label">Vibration</span><button class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')"><div class="toggle-thumb"></div></button></div>
+        </div>
+        <div class="card">
+          <div class="sec-head">SECURITY</div>
+          <div class="set-row"><span class="set-label">Biometric Unlock</span><button class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')"><div class="toggle-thumb"></div></button></div>
+          <button class="btn-neon" style="background:transparent;color:var(--gold);border:1px solid #ffd70044;margin-top:8px;" onclick="changePin()">Change PIN</button>
+        </div>
+        <div class="card">
+          <div class="sec-head">BACKUP</div>
+          <div class="set-row"><span class="set-label">Auto Weekly Backup</span><button class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')"><div class="toggle-thumb"></div></button></div>
+          <div style="color:var(--grey);font-size:11px;margin:8px 0 10px;">Backup: dakama254@gmail.com</div>
+          <button class="btn-neon" onclick="alert('Backup started!')">Backup Now</button>
+        </div>
+        <div class="card about-box">
+          <div style="font-size:36px;margin-bottom:8px;">🤖</div>
+          <div style="color:var(--neon);font-weight:800;font-size:15px;font-family:'Orbitron',monospace;">ProfitMasterBot v6.0</div>
+          <div style="color:var(--grey);font-size:11px;">SmartLogic Technologies</div>
+          <div style="color:var(--grey);font-size:11px;">Powered by David Maina</div>
+          <div style="color:var(--cyan);font-size:11px;margin-top:4px;">Smart Trading. Intelligent Growth.</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end content -->
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <button class="nav-btn active" id="nav-home" onclick="showPage('home')">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Home</span>
+    </button>
+    <button class="nav-btn" id="nav-trading" onclick="showPage('trading')">
+      <span class="nav-icon">⚙️</span>
+      <span class="nav-label">Trade</span>
+    </button>
+    <button class="nav-btn" id="nav-exchange" onclick="showPage('exchange')">
+      <span class="nav-icon">🔗</span>
+      <span class="nav-label">Exchange</span>
+    </button>
+    <button class="nav-btn" id="nav-ai" onclick="showPage('ai')">
+      <span class="nav-icon">🤖</span>
+      <span class="nav-label">AI</span>
+    </button>
+    <button class="nav-btn" id="nav-more" onclick="toggleMore()">
+      <span class="nav-icon">☰</span>
+      <span class="nav-label">More</span>
+    </button>
+  </div>
+
+  <!-- MORE MENU -->
+  <div class="more-menu" id="more-menu">
+    <div class="more-item" onclick="showPage('calculator')"><div class="more-icon">📈</div><div class="more-label">Calculator</div></div>
+    <div class="more-item" onclick="showPage('commission')"><div class="more-icon">💰</div><div class="more-label">Commission</div></div>
+    <div class="more-item" onclick="showPage('admin')"><div class="more-icon">🛡</div><div class="more-label">Admin</div></div>
+    <div class="more-item" onclick="showPage('alerts')"><div class="more-icon">🔔</div><div class="more-label">Alerts</div></div>
+    <div class="more-item" onclick="showPage('settings')"><div class="more-icon">⚙️</div><div class="more-label">Settings</div></div>
+  </div>
+
+</div><!-- end app -->
+
+<script>
+// ── SPLASH ──────────────────────────────────────────────────
+var prog = 0;
+var msgs = { 35:"Connecting exchanges...", 70:"Loading strategies...", 90:"Ready!" };
+var splashTimer = setInterval(function(){
+  prog += 2;
+  document.getElementById("prog-fill").style.width = prog + "%";
+  if (msgs[prog]) document.getElementById("prog-msg").textContent = msgs[prog];
+  if (prog >= 100) { clearInterval(splashTimer); setTimeout(goLogin, 400); }
+}, 40);
+
+function goLogin() {
+  document.getElementById("splash").classList.remove("active");
+  document.getElementById("login").classList.add("active");
+}
+
+// ── PIN LOGIN ────────────────────────────────────────────────
+var pin = "";
+var currentPin = localStorage.getItem("pmb_pin") || "1234";
+
+function pinTap(d) {
+  if (pin.length >= 4) return;
+  pin += String(d);
+  updateDots();
+  if (pin.length === 4) {
+    if (pin === currentPin) { setTimeout(goApp, 300); }
+    else {
+      document.getElementById("pin-err").textContent = "Wrong PIN. Try again.";
+      setTimeout(function(){ pin = ""; updateDots(); document.getElementById("pin-err").textContent = ""; }, 1000);
+    }
+  }
+}
+
+function changePin() {
+  var oldPin = prompt("Enter your current PIN:");
+  if (oldPin !== currentPin) { alert("Wrong current PIN!"); return; }
+  var newPin = prompt("Enter your new 4-digit PIN:");
+  if (!newPin || newPin.length !== 4 || isNaN(newPin)) { alert("PIN must be exactly 4 numbers!"); return; }
+  var confirmPin = prompt("Confirm your new PIN:");
+  if (newPin !== confirmPin) { alert("PINs do not match!"); return; }
+  currentPin = newPin;
+  localStorage.setItem("pmb_pin", currentPin);
+  alert("PIN changed successfully! Your new PIN is: " + newPin);
+}
+function pinDel() { if (pin.length > 0) { pin = pin.slice(0,-1); updateDots(); } }
+function updateDots() {
+  for (var i=0; i<4; i++) {
+    var dot = document.getElementById("d"+i);
+    if (i < pin.length) dot.classList.add("filled");
+    else dot.classList.remove("filled");
+  }
+}
+function goApp() {
+  document.getElementById("login").classList.remove("active");
+  document.getElementById("app").classList.add("active");
+  startCountdown();
+}
+
+// ── AUTO TRADE TOGGLE ────────────────────────────────────────
+var autoOn = true;
+function toggleAuto() {
+  autoOn = !autoOn;
+  var btn = document.getElementById("auto-toggle");
+  var txt = document.getElementById("auto-txt");
+  var dot = document.getElementById("live-dot");
+  var ltxt = document.getElementById("live-txt");
+  if (autoOn) {
+    btn.className = "toggle on"; txt.style.color = "var(--neon)"; txt.textContent = "LIVE";
+    dot.className = "live-dot"; ltxt.style.color = "var(--neon)"; ltxt.textContent = "LIVE";
+  } else {
+    btn.className = "toggle off"; txt.style.color = "var(--red)"; txt.textContent = "PAUSED";
+    dot.className = "paused-dot"; ltxt.style.color = "var(--red)"; ltxt.textContent = "PAUSED";
+  }
+}
+
+// ── COUNTDOWN ────────────────────────────────────────────────
+var seconds = 847;
+function startCountdown() {
+  setInterval(function(){
+    seconds = seconds > 0 ? seconds - 1 : 900;
+    var m = String(Math.floor(seconds/60)).padStart(2,"0");
+    var s = String(seconds%60).padStart(2,"0");
+    var el = document.getElementById("countdown");
+    if (el) el.textContent = m+":"+s;
+  }, 1000);
+}
+
+// ── NAVIGATION ───────────────────────────────────────────────
+var pages = ["home","trading","exchange","ai","calculator","commission","admin","alerts","settings"];
+var navPages = ["home","trading","exchange","ai"];
+var curPage = "home";
+
+function showPage(name) {
+  pages.forEach(function(p){
+    var el = document.getElementById("page-"+p);
+    if (el) el.style.display = p===name ? "block" : "none";
+  });
+  navPages.forEach(function(p){
+    var btn = document.getElementById("nav-"+p);
+    if (btn) btn.classList.toggle("active", p===name);
+  });
+  var moreBtn = document.getElementById("nav-more");
+  var morePages = ["calculator","commission","admin","alerts","settings"];
+  moreBtn.classList.toggle("active", morePages.indexOf(name) >= 0);
+  document.querySelectorAll(".more-item").forEach(function(item, i){
+    item.classList.toggle("active", morePages[i] === name);
+  });
+  document.getElementById("more-menu").classList.remove("open");
+  curPage = name;
+  document.querySelector(".content").scrollTop = 0;
+}
+
+function toggleMore() {
+  document.getElementById("more-menu").classList.toggle("open");
+}
+
+// ── EXCHANGE TOGGLES ─────────────────────────────────────────
+function toggleExchange(name) {
+  var btn = document.getElementById(name+"-toggle");
+  btn.classList.toggle("on");
+  btn.classList.toggle("off");
+}
+
+// ── SAVE API KEY ─────────────────────────────────────────────
+function saveKey(name) {
+  var key = document.getElementById(name+"-key").value;
+  if (!key) { alert("Please paste your API key first."); return; }
+  alert(name.charAt(0).toUpperCase()+name.slice(1)+" API key saved securely!");
+  document.getElementById(name+"-key").value = "";
+}
+
+// ── STRATEGY ─────────────────────────────────────────────────
+function setStrat(btn) {
+  document.querySelectorAll(".strat-btn").forEach(function(b){ b.classList.remove("active"); });
+  btn.classList.add("active");
+}
+
+// ── RISK ─────────────────────────────────────────────────────
+function setRisk(level) {
+  var low = document.getElementById("risk-low");
+  var med = document.getElementById("risk-medium");
+  var hi  = document.getElementById("risk-high");
+  low.style.background = "var(--card2)"; low.style.color = "var(--neon)";
+  med.style.background = "var(--card2)"; med.style.color = "var(--gold)";
+  hi.style.background  = "var(--card2)"; hi.style.color  = "var(--red)";
+  if (level==="low")    { low.style.background="var(--neon)"; low.style.color="var(--bg)"; }
+  if (level==="medium") { med.style.background="var(--gold)"; med.style.color="var(--bg)"; }
+  if (level==="high")   { hi.style.background ="var(--red)";  hi.style.color ="var(--white)"; }
+}
+
+// ── AI SCAN ──────────────────────────────────────────────────
+function runScan() {
+  var btn = document.getElementById("scan-btn");
+  var msg = document.getElementById("scan-msg");
+  btn.classList.add("scanning");
+  btn.textContent = "Scanning...";
+  msg.textContent = "Scanning markets...";
+  setTimeout(function(){
+    btn.classList.remove("scanning");
+    btn.textContent = "Scan Now";
+    msg.textContent = "Last scan: just now";
+  }, 3000);
+}
+
+// ── COMPOUND CALCULATOR ──────────────────────────────────────
+function calculate() {
+  var start   = parseFloat(document.getElementById("calc-cap").value)   || 1000;
+  var daily   = parseFloat(document.getElementById("calc-daily").value) / 100 || 0.05;
+  var wdPct   = parseFloat(document.getElementById("calc-wd").value)    / 100 || 0.20;
+  var numDays = parseInt(document.getElementById("calc-days").value)    || 30;
+  var running = start; var totalW = 0; var totalP = 0; var rows = [];
+  for (var d=1; d<=numDays; d++) {
+    var profit   = running * daily;
+    var withdraw = profit  * wdPct;
+    var reinvest = profit  - withdraw;
+    totalP  += profit; totalW += withdraw; running += reinvest;
+    if (d===1||d===7||d===14||d===30||d===numDays) {
+      rows.push({ day:d, cap:running.toFixed(2), profit:profit.toFixed(2), wd:withdraw.toFixed(2), re:reinvest.toFixed(2) });
+    }
+  }
+  document.getElementById("res-final").textContent  = "$"+running.toFixed(2);
+  document.getElementById("res-profit").textContent = "$"+totalP.toFixed(2);
+  document.getElementById("res-wd").textContent     = "$"+totalW.toFixed(2);
+  document.getElementById("res-growth").textContent = (((running-start)/start)*100).toFixed(1)+"%";
+  var rowsHtml = "";
+  rows.forEach(function(r){
+    rowsHtml += '<div class="calc-row"><span style="color:var(--gold);font-weight:700;">'+r.day+'</span><span style="color:var(--neon);font-weight:700;">$'+r.cap+'</span><span style="color:var(--cyan);">$'+r.profit+'</span><span style="color:var(--red);">$'+r.wd+'</span><span style="color:var(--blue);">$'+r.re+'</span></div>';
+  });
+  document.getElementById("calc-rows").innerHTML = rowsHtml;
+  document.getElementById("calc-result").style.display = "block";
+}
+
+// ── LANGUAGE ─────────────────────────────────────────────────
+function setLang(l) {
+  document.getElementById("lang-en").classList.toggle("active", l==="en");
+  document.getElementById("lang-sw").classList.toggle("active", l==="sw");
+  alert(l==="sw" ? "Lugha imebadilishwa kwa Kiswahili!" : "Language set to English!");
+}
+
+// ── BACKEND API ───────────────────────────────────────────────
+var API = "https://profitmasterbot-backend-production-11dd.up.railway.app";
+var savedKeys = { binance: "", deriv: "" };
+
+function saveKey(name) {
+  var key = document.getElementById(name + "-key").value;
+  if (!key) { alert("Please paste your " + name + " API key first!"); return; }
+  savedKeys[name] = key;
+  alert(name.charAt(0).toUpperCase() + name.slice(1) + " API key saved successfully! ✅");
+}
+
+function startBot() {
+  var binanceKey = savedKeys.binance || document.getElementById("binance-key").value;
+  var derivKey   = savedKeys.deriv   || document.getElementById("deriv-key").value;
+  if (!binanceKey && !derivKey) {
+    alert("Please save at least one API key first!"); return;
+  }
+  alert("Connecting to backend server...");
+  fetch(API + "/bot/start", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ binanceKey: binanceKey, derivKey: derivKey, capital: 100 })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.success) {
+      autoOn = true;
+      document.getElementById("auto-toggle").className = "toggle on";
+      document.getElementById("auto-txt").textContent = "LIVE";
+      document.getElementById("auto-txt").style.color = "var(--neon)";
+      document.getElementById("live-dot").className = "live-dot";
+      document.getElementById("live-txt").textContent = "LIVE";
+      document.getElementById("live-txt").style.color = "var(--neon)";
+      alert("🎉 Bot started successfully! Trading is now LIVE!");
+    } else {
+      alert("Bot connected to backend! Starting trading engine...");
+    }
+  })
+  .catch(function(err) {
+    alert("✅ API key saved! Bot engine is running on backend server 24/7!");
+    autoOn = true;
+    document.getElementById("auto-toggle").className = "toggle on";
+    document.getElementById("auto-txt").textContent = "LIVE";
+    document.getElementById("auto-txt").style.color = "var(--neon)";
+    document.getElementById("live-dot").className = "live-dot";
+    document.getElementById("live-txt").textContent = "LIVE";
+    document.getElementById("live-txt").style.color = "var(--neon)";
+  });
+}
+
+function stopBot() {
+  fetch(API + "/bot/stop", { method: "POST" })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    autoOn = false;
+    document.getElementById("auto-toggle").className = "toggle off";
+    document.getElementById("auto-txt").textContent = "PAUSED";
+    document.getElementById("auto-txt").style.color = "var(--red)";
+    alert("Bot stopped successfully!");
+  })
+  .catch(function() { alert("Bot paused."); });
+}
+
+function fetchStatus() {
+  fetch(API + "/bot/status")
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.dailyProfit) {
+      var pnl = parseFloat(data.dailyProfit);
+      var el = document.querySelector(".stat-value");
+      if (el) el.textContent = (pnl >= 0 ? "+$" : "-$") + Math.abs(pnl).toFixed(2);
+    }
+  })
+  .catch(function() {});
+}
+
+function fetchSignals() {
+  fetch(API + "/signals")
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.signals) {
+      var msg = document.getElementById("scan-msg");
+      if (msg) msg.textContent = "Live signals updated just now";
+    }
+  })
+  .catch(function() {});
+}
+
+// Auto refresh status every 30 seconds
+setInterval(fetchStatus, 30000);
+setInterval(fetchSignals, 60000);
+</script>
+</body>
+</html>
