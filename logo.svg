@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <!-- 3D metallic gold gradient for the P -->
+    <linearGradient id="goldP" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#fff5c0"/>
+      <stop offset="15%"  stop-color="#ffd700"/>
+      <stop offset="35%"  stop-color="#b8860b"/>
+      <stop offset="50%"  stop-color="#8b6914"/>
+      <stop offset="65%"  stop-color="#daa520"/>
+      <stop offset="80%"  stop-color="#ffd700"/>
+      <stop offset="100%" stop-color="#8b5a00"/>
+    </linearGradient>
+
+    <!-- Gold gradient for arrow -->
+    <linearGradient id="goldArrow" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#8b5a00"/>
+      <stop offset="30%"  stop-color="#daa520"/>
+      <stop offset="60%"  stop-color="#ffd700"/>
+      <stop offset="100%" stop-color="#fff5c0"/>
+    </linearGradient>
+
+    <!-- Glow filter -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Subtle shadow for depth -->
+    <filter id="shadow">
+      <feDropShadow dx="3" dy="3" stdDeviation="6" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <!-- Black rounded background -->
+  <rect width="512" height="512" rx="80" fill="#080808"/>
+
+  <!-- Subtle inner glow on background -->
+  <radialGradient id="bgGlow" cx="50%" cy="40%" r="60%">
+    <stop offset="0%"   stop-color="#1a1200" stop-opacity="0.6"/>
+    <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+  </radialGradient>
+  <rect width="512" height="512" rx="80" fill="url(#bgGlow)"/>
+
+  <!-- LOWERCASE ITALIC P -->
+  <!-- Main P body with 3D metallic gold -->
+  <text
+    x="105"
+    y="370"
+    font-family="Georgia, 'Palatino Linotype', Palatino, serif"
+    font-size="360"
+    font-weight="900"
+    font-style="italic"
+    fill="url(#goldP)"
+    filter="url(#glow)"
+    opacity="1"
+  >p</text>
+
+  <!-- P highlight shine - left side bright -->
+  <text
+    x="105"
+    y="370"
+    font-family="Georgia, 'Palatino Linotype', Palatino, serif"
+    font-size="360"
+    font-weight="900"
+    font-style="italic"
+    fill="none"
+    stroke="#fff8d0"
+    stroke-width="1.5"
+    opacity="0.3"
+  >p</text>
+
+  <!-- CURVED ARROW -->
+  <!-- The swooping curve: starts bottom-left of p, goes under, curves up to top-right -->
+  <path
+    d="M 118 415 C 160 480, 310 490, 390 320 L 370 295"
+    fill="none"
+    stroke="url(#goldArrow)"
+    stroke-width="18"
+    stroke-linecap="round"
+    filter="url(#glow)"
+  />
+
+  <!-- Arrow head - the angled tip pointing upper right -->
+  <!-- Main arrowhead -->
+  <path
+    d="M 385 275 L 355 305 L 400 325 Z"
+    fill="url(#goldArrow)"
+    filter="url(#glow)"
+  />
+
+  <!-- Arrowhead outer tip -->
+  <path
+    d="M 415 255 L 370 290 L 405 318 Z"
+    fill="#ffd700"
+    filter="url(#glow)"
+  />
+
+  <!-- Bright tip highlight -->
+  <path
+    d="M 428 242 L 390 278 L 412 295 Z"
+    fill="#fff8c0"
+    opacity="0.9"
+    filter="url(#glow)"
+  />
+</svg>
