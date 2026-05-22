@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
+
+<title>ProfitMasterBot v6.3 LIVE</title>
+
+<style>
+body{
+  margin:0;
+  font-family:system-ui;
+  background:#050d1a;
+  color:#e8f4fd;
+}
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  padding:12px;
+  background:#0a1628;
+  border-bottom:1px solid #1a3a5c;
+}
+
+.live{
+  color:#00ff88;
+  font-weight:800;
+}
+
+.card{
+  margin:12px;
+  padding:14px;
+  background:#0a1628;
+  border:1px solid #1a3a5c;
+  border-radius:14px;
+}
+
+.value{
+  font-size:28px;
+  font-weight:900;
+  color:#00ff88;
+}
+
+.badge{
+  font-size:11px;
+  padding:4px 10px;
+  border-radius:20px;
+  display:inline-block;
+  margin-top:6px;
+}
+
+.ok{background:#00ff8822;color:#00ff88;border:1px solid #00ff8855;}
+.warn{background:#ff336622;color:#ff3366;border:1px solid #ff336655;}
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+  <div>ProfitMasterBot v6.3</div>
+  <div class="live" id="status">● CONNECTING...</div>
+</div>
+
+<div class="card">
+  <div>Total Portfolio</div>
+  <div class="value" id="portfolio">$0.00</div>
+  <div class="badge ok" id="connBadge">SYNC ACTIVE</div>
+</div>
+
+<div class="card">
+  <div>Daily Profit</div>
+  <div class="value" id="profit">+$0.00</div>
+</div>
+
+<div class="card">
+  <div>Win Rate</div>
+  <div class="value" id="winrate">0%</div>
+</div>
+
+<div class="card">
+  <div>Live Trades</div>
+  <div id="trades">Loading...</div>
+</div>
+
+<script>
+let lastData = null;
+
+/* ==============================
+   LIVE SYNC ENGINE (CORE FIX)
+================================ */
+async function fetchDashboard(){
+  try {
+    const res = await fetch("/api/dashboard", {
+      cache: "no-store"
+    });
+
+    if(!res.ok) throw new Error("API Error");
+
+    const data = await res.json();
+
+    updateUI(data);
+
+    document.getElementById("status").innerText = "● LIVE";
+    document.getElementById("status").style.color = "#00ff88";
+
+  } catch (err) {
+    console.log("sync error", err);
+
+    document.getElementById("status").innerText = "● RECONNECTING...";
+    document.getElementById("status").style.color = "#ff3366";
+  }
+}
+
+/* ==============================
+   UI UPDATER (SMOOTH REFRESH)
+================================ */
+function updateUI(data){
+  if(!data) return;
+
+  // only update if changed (prevents flicker)
+  if(data.portfolio !== lastData?.portfolio){
+    document.getElementById("portfolio").innerText =
+      `$${Number(data.portfolio).toLocaleString()}`;
+  }
+
+  if(data.profit !== lastData?.profit){
+    document.getElementById("profit").innerText =
+      `+$${Number(data.profit).toLocaleString()}`;
+  }
+
+  if(data.winrate !== lastData?.winrate){
+    document.getElementById("winrate").innerText =
+      `${data.winrate}%`;
+  }
+
+  if(data.trades){
+    document.getElementById("trades").innerHTML =
+      data.trades.map(t =>
+        `<div>• ${t.pair} ${t.pnl > 0 ? "🟢" : "🔴"} ${t.pnl}</div>`
+      ).join("");
+  }
+
+  lastData = data;
+}
+
+/* ==============================
+   AUTO REFRESH LOOP
+================================ */
+setInterval(fetchDashboard, 4000); // every 4 sec
+fetchDashboard(); // initial load
+</script>
+
+</body>
+</html>
