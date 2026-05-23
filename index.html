@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProfitMasterBot v6.4.0</title>
+
+<style>
+:root{
+  --bg:#0a0f1c;
+  --card:#121a2b;
+  --card2:#0f1726;
+  --neon:#00ff88;
+  --gold:#ffd700;
+  --cyan:#00ccff;
+  --red:#ff3366;
+  --blue:#4da3ff;
+  --white:#ffffff;
+  --grey:#8a93a5;
+  --border:#1f2a44;
+}
+
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:var(--bg);
+  color:var(--white);
+}
+
+.page{padding:15px;}
+.card{
+  background:var(--card);
+  padding:15px;
+  border-radius:14px;
+  margin-bottom:12px;
+  border:1px solid var(--border);
+}
+.page-title{font-size:18px;font-weight:800;margin-bottom:10px;}
+
+.btn{padding:10px;border-radius:10px;border:none;width:100%;margin-top:8px;}
+.btn-neon{background:var(--neon);color:#000;font-weight:700;}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--white);}
+</style>
+</head>
+
+<body>
+
+<div class="page">
+
+  <div class="page-title">📊 ProfitMasterBot v6.4.0</div>
+
+  <!-- VERSION DISPLAY -->
+  <div class="card">
+    <div id="app-version" style="font-size:12px;color:var(--grey);">
+      syncing version...
+    </div>
+  </div>
+
+  <!-- STATUS -->
+  <div class="card">
+    <div style="font-weight:700;">Live Status</div>
+    <div id="daily-pnl" style="color:var(--neon);margin-top:5px;">+$0.00</div>
+  </div>
+
+  <button class="btn btn-neon" onclick="checkBackend()">Check Backend</button>
+  <button class="btn btn-outline" onclick="syncVersion()">Sync Version</button>
+
+</div>
+
+<script>
+
+/* =========================
+   CONFIG (LOCKED v6.4.0)
+========================= */
+
+var API = "https://profitmasterbot-backend-production-11dd.up.railway.app";
+var APP_VERSION = "6.4.0";
+
+/* =========================
+   VERSION SYNC (SAFE ADDON)
+========================= */
+
+function syncVersion(){
+  fetch(API + "/version?t=" + Date.now())
+    .then(r => r.json())
+    .then(d => {
+      if(d && d.version){
+        var el = document.getElementById("app-version");
+        if(el) el.textContent = "App Version: v" + d.version;
+      }
+    })
+    .catch(()=>{});
+}
+
+/* =========================
+   BACKEND CHECK
+========================= */
+
+function checkBackend(){
+  fetch(API + "/")
+    .then(r => r.json())
+    .then(d => alert("Backend OK: " + d.status))
+    .catch(() => alert("Backend unreachable"));
+}
+
+/* =========================
+   INIT
+========================= */
+
+function startApp(){
+  syncVersion();
+  setInterval(syncVersion, 60000);
+}
+
+document.addEventListener("DOMContentLoaded", startApp);
+
+</script>
+
+</body>
+</html>
