@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProfitMasterBot v6.4</title>
+
+<style>
+body{
+    margin:0;
+    padding:0;
+    font-family:Arial,sans-serif;
+    background:#0a0f1f;
+    color:white;
+}
+
+.container{
+    padding:20px;
+    text-align:center;
+}
+
+.card{
+    background:#121a33;
+    border-radius:15px;
+    padding:20px;
+    margin-top:20px;
+    box-shadow:0 0 15px rgba(0,255,136,0.2);
+}
+
+.status{
+    font-size:18px;
+    margin-top:10px;
+}
+
+.online{
+    color:#00ff88;
+}
+
+.offline{
+    color:red;
+}
+
+button{
+    background:#00ff88;
+    border:none;
+    padding:12px 20px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:bold;
+    margin-top:20px;
+}
+
+h1{
+    color:#00ff88;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>ProfitMasterBot v6.4</h1>
+
+    <div class="card">
+        <h2>Backend Connection Status</h2>
+
+        <div id="status" class="status offline">
+            Checking backend...
+        </div>
+
+        <button onclick="checkBackend()">
+            Reconnect Backend
+        </button>
+    </div>
+
+    <div class="card">
+        <h2>System Info</h2>
+
+        <p id="serverTime">Waiting for backend...</p>
+    </div>
+
+</div>
+
+<script>
+
+// ==========================================
+// IMPORTANT:
+// REPLACE THIS WITH YOUR REAL BACKEND URL
+// ==========================================
+
+const API_URL = "https://YOUR-BACKEND-URL.up.railway.app";
+
+// ==========================================
+// BACKEND CONNECTION CHECK
+// ==========================================
+
+async function checkBackend(){
+
+    const statusDiv = document.getElementById("status");
+    const serverTime = document.getElementById("serverTime");
+
+    statusDiv.innerHTML = "Checking backend...";
+    statusDiv.className = "status offline";
+
+    try{
+
+        const response = await fetch(API_URL + "/health");
+
+        const data = await response.json();
+
+        statusDiv.innerHTML = "Backend Connected ✅";
+        statusDiv.className = "status online";
+
+        serverTime.innerHTML =
+            "Server Status: " + data.status;
+
+    }catch(error){
+
+        statusDiv.innerHTML = "Backend Offline ❌";
+        statusDiv.className = "status offline";
+
+        serverTime.innerHTML =
+            "Connection failed";
+    }
+}
+
+// auto connect on load
+checkBackend();
+
+</script>
+
+</body>
+</html>
