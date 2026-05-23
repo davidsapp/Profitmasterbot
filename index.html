@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProfitMasterBot v6.4 - WebSocket</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #0a0f1f;
+    color: white;
+}
+
+.container {
+    padding: 20px;
+}
+
+.card {
+    background: #121a33;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+
+.status {
+    font-weight: bold;
+}
+
+.green { color: #00ff88; }
+.red { color: #ff4d4d; }
+.yellow { color: #ffcc00; }
+
+button {
+    padding: 10px 15px;
+    margin: 5px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.start { background: #00ff88; }
+.stop { background: #ff4d4d; }
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="card">
+        <h2>Server Status</h2>
+        <div id="serverStatus" class="status yellow">Connecting...</div>
+    </div>
+
+    <div class="card">
+        <h2>Bot Status</h2>
+        <div id="botStatus">Idle</div>
+    </div>
+
+    <div class="card">
+        <h2>Balance</h2>
+        <div id="balance">0</div>
+    </div>
+
+    <div class="card">
+        <h2>Profit</h2>
+        <div id="profit">0</div>
+    </div>
+
+    <div class="card">
+        <button class="start" onclick="startBot()">START BOT</button>
+        <button class="stop" onclick="stopBot()">STOP BOT</button>
+    </div>
+
+</div>
+
+<script>
+// =========================
+// WEBSOCKET CONNECTION
+// =========================
+
+let socket;
+let reconnectInterval = 3000;
+
+function connectWS() {
+    socket = new WebSocket(`ws://${window.location.host}`);
+
+    socket.onopen = () => {
+        document.getElementById("serverStatus").innerText = "Connected";
+        document.getElementById("serverStatus").className = "status green";
+    };
+
+    socket.onclose = () => {
+        document.getElementById("serverStatus").innerText = "Disconnected";
+        document.getElementById("serverStatus").className = "status red";
+
+        // auto reconnect
+        setTimeout(connectWS, reconnectInterval);
+    };
+
+    socket.onerror = () => {
+        document.getElementById("serverStatus").innerText = "Error";
+        document.getElementById("serverStatus").className = "status red";
+    };
+
+    socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+
+        if (data.type === "init" || data.type === "update") {
+            updateUI(data.state);
+        }
+
+        if (data.type === "heartbeat") {
+            console.log("heartbeat:", data.time);
+        }
+    };
+}
+
+connectWS();
+
+// =========================
+// UI UPDATE FUNCTION
+// =========================
+
+function updateUI(state) {
+    document.getElementById("balance").innerText = state.balance.toFixed(2);
+    document.getElementById("profit").innerText = state.profit.toFixed(2);
+
+    if (state.botRunning) {
+        document.getElementById("botStatus").innerText = "RUNNING";
+        document.getElementById("botStatus").className = "green";
+    } else {
+        document.getElementById("botStatus").innerText = "STOPPED";
+        document.getElementById("botStatus").className = "yellow";
+    }
+}
+
+// =========================
+// BOT CONTROLS
+// =========================
+
+function startBot() {
+    fetch("/start", { method: "POST" });
+}
+
+function stopBot() {
+    fetch("/stop", { method: "POST" });
+}
+
+// =========================
+// OPTIONAL TEST TRADE
+// =========================
+
+function trade(amount = 10) {
+    fetch("/trade", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount })
+    });
+}
+
+</script>
+
+</body>
+</html>
