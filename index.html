@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProfitMasterBot</title>
+
+<style>
+body {
+    margin:0;
+    font-family: Arial;
+    background:#0f172a;
+    color:white;
+    text-align:center;
+}
+
+.status {
+    padding:10px;
+    margin:10px;
+    display:inline-block;
+    border-radius:8px;
+}
+
+.connected { background:green; }
+.disconnected { background:red; }
+
+button {
+    padding:10px 20px;
+    margin:10px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>ProfitMasterBot</h2>
+
+<div id="wsStatus" class="status disconnected">Disconnected</div>
+<div id="botStatus" class="status">Idle</div>
+
+<br>
+
+<button onclick="startBot()">Start</button>
+<button onclick="stopBot()">Stop</button>
+
+<script>
+
+const API_BASE = window.location.origin;
+
+let ws;
+
+// ======================
+// WS CONNECT
+// ======================
+function connect() {
+
+    const wsURL = window.location.protocol === "https:"
+        ? "wss://" + window.location.host
+        : "ws://" + window.location.host;
+
+    ws = new WebSocket(wsURL);
+
+    ws.onopen = () => {
+        document.getElementById("wsStatus").innerText = "Connected";
+        document.getElementById("wsStatus").className = "status connected";
+    };
+
+    ws.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+
+        if (data.type === "init" || data.type === "status") {
+            updateBot(data.running);
+        }
+    };
+
+    ws.onclose = () => {
+        document.getElementById("wsStatus").innerText = "Reconnecting...";
+        document.getElementById("wsStatus").className = "status disconnected";
+
+        setTimeout(connect, 2000);
+    };
+}
+
+// ======================
+// BOT UI
+// ======================
+function updateBot(running) {
+    const el = document.getElementById("botStatus");
+
+    if (running) {
+        el.innerText = "Bot Running";
+        el.style.background = "green";
+    } else {
+        el.innerText = "Bot Stopped";
+        el.style.background = "red";
+    }
+}
+
+// ======================
+// BUTTONS (FIXED)
+// ======================
+function startBot() {
+    fetch(API_BASE + "/start", { method: "POST" });
+}
+
+function stopBot() {
+    fetch(API_BASE + "/stop", { method: "POST" });
+}
+
+// ======================
+connect();
+
+</script>
+
+</body>
+</html>
