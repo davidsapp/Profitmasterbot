@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProfitMasterBot</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: #0f172a;
+    color: white;
+    text-align: center;
+}
+
+.status {
+    padding: 10px;
+    margin: 10px;
+    display: inline-block;
+}
+
+button {
+    padding: 10px 20px;
+    margin: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>ProfitMasterBot</h2>
+
+<div id="status">Bot: Unknown</div>
+
+<br>
+
+<button onclick="startBot()">Start</button>
+<button onclick="stopBot()">Stop</button>
+
+<script>
+
+const API = window.location.origin;
+
+// ======================
+// STATUS POLLING
+// ======================
+function checkStatus() {
+    fetch(API + "/status")
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById("status").innerText =
+                data.running ? "Bot: Running" : "Bot: Stopped";
+        });
+}
+
+// ======================
+// BUTTONS
+// ======================
+function startBot() {
+    fetch(API + "/start", { method: "POST" });
+}
+
+function stopBot() {
+    fetch(API + "/stop", { method: "POST" });
+}
+
+// ======================
+// LOOP
+// ======================
+setInterval(checkStatus, 2000);
+checkStatus();
+
+</script>
+
+</body>
+</html>
