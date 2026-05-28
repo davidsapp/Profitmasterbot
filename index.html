@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProfitMasterBot v6.2</title>
+</head>
+
+<body style="background:#050816;color:white;font-family:Arial;text-align:center;padding:20px;">
+
+<h1 style="color:#00ff99;">ProfitMasterBot v6.2</h1>
+
+<p>System Status: <span id="status" style="color:#00ff99;">READY</span></p>
+
+<h2>BTC Price</h2>
+<p id="btc" style="font-size:24px;color:#00ff99;">Loading...</p>
+
+<h2>Balance</h2>
+<p id="balance">$100.00</p>
+
+<h2>Profit</h2>
+<p id="profit">+$0.00</p>
+
+<button onclick="start()" style="padding:15px;width:80%;margin-top:10px;background:#00ff99;border:none;font-weight:bold;">START BOT</button>
+
+<script>
+
+let running = false;
+let balance = 100;
+let profit = 0;
+
+/* REAL BTC PRICE FUNCTION */
+async function updateBTC(){
+    try {
+        const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd");
+        const data = await res.json();
+
+        const price = data.bitcoin.usd;
+        document.getElementById("btc").innerText = "$" + price;
+
+    } catch (e) {
+        document.getElementById("btc").innerText = "Price error";
+    }
+}
+
+/* BOT LOGIC */
+function tradeLoop(){
+
+    if(!running) return;
+
+    let gain = (Math.random() * 3).toFixed(2);
+
+    balance += parseFloat(gain);
+    profit += parseFloat(gain);
+
+    document.getElementById("balance").innerText = "$" + balance.toFixed(2);
+    document.getElementById("profit").innerText = "+$" + profit.toFixed(2);
+
+    setTimeout(tradeLoop, 4000);
+}
+
+/* START BOT */
+function start(){
+    running = true;
+
+    document.getElementById("status").innerText = "RUNNING";
+
+    updateBTC();
+    setInterval(updateBTC, 10000);
+
+    tradeLoop();
+}
+
+</script>
+
+</body>
+</html>
