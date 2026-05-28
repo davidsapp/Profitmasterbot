@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProfitMasterBot v6.2</title>
+
+<style>
+body{margin:0;font-family:Arial;background:#050816;color:white;}
+
+header{
+background:#0b1026;text-align:center;padding:18px;
+border-bottom:2px solid #00ff99;
+}
+
+h1{color:#00ff99;margin:0;}
+
+.container{padding:15px;}
+
+.card{
+background:#11182f;border:1px solid #00ff99;
+border-radius:12px;padding:15px;margin-bottom:15px;
+}
+
+.status{display:flex;justify-content:space-between;margin-top:8px;}
+
+.green{color:#00ff99;}
+.red{color:#ff4444;}
+.orange{color:#ffaa00;}
+
+button{
+width:100%;padding:12px;margin-top:10px;
+border:none;border-radius:8px;font-weight:bold;
+}
+
+.start{background:#00ff99;}
+.pause{background:#ffaa00;}
+.stop{background:#ff4444;color:white;}
+
+.logs{
+height:150px;overflow:auto;background:#08101f;
+padding:10px;border-radius:10px;
+}
+
+.log{font-size:13px;color:#ccc;margin-bottom:5px;}
+
+.online{
+width:10px;height:10px;background:#00ff99;
+border-radius:50%;display:inline-block;
+margin-right:5px;animation:pulse 1s infinite;
+}
+
+@keyframes pulse{0%{opacity:1;}50%{opacity:0.3;}100%{opacity:1;}}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>ProfitMasterBot v6.2</h1>
+<p>Powered by David Maina</p>
+</header>
+
+<div class="container">
+
+<div class="card">
+<h2>Bot Status</h2>
+
+<div class="status">
+<span>Connection</span>
+<span class="green"><span class="online"></span>Connected</span>
+</div>
+
+<div class="status">
+<span>Trading</span>
+<span id="status">Stopped</span>
+</div>
+
+<div class="status">
+<span>BTC Price</span>
+<span id="btcPrice">$65000</span>
+</div>
+
+<button class="start" onclick="startBot()">START</button>
+<button class="pause" onclick="pauseBot()">PAUSE</button>
+<button class="stop" onclick="stopBot()">STOP</button>
+
+</div>
+
+<div class="card">
+<h2>Balance</h2>
+<div id="balance">$100.00</div>
+<div id="profit">+$0.00</div>
+</div>
+
+<div class="card">
+<h2>Logs</h2>
+<div class="logs" id="logs"></div>
+</div>
+
+</div>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+let running = false;
+let balance = 100;
+let profit = 0;
+let btcPrice = 65000;
+
+/* SAFE ELEMENTS */
+const statusEl = document.getElementById("status");
+const logsEl = document.getElementById("logs");
+const balEl = document.getElementById("balance");
+const profEl = document.getElementById("profit");
+const btcEl = document.getElementById("btcPrice");
+
+function log(msg){
+    if(!logsEl) return;
+    const d = document.createElement("div");
+    d.className="log";
+    d.innerText = new Date().toLocaleTimeString()+" "+msg;
+    logsEl.prepend(d);
+}
+
+function startBot(){
+    if(!statusEl) return;
+    running = true;
+    statusEl.innerText="Running";
+    log("Bot started");
+    run();
+}
+
+function pauseBot(){
+    running = false;
+    if(statusEl) statusEl.innerText="Paused";
+    log("Bot paused");
+}
+
+function stopBot(){
+    running = false;
+    if(statusEl) statusEl.innerText="Stopped";
+    log("Bot stopped");
+}
+
+function run(){
+    if(!running) return;
+
+    let gain = (Math.random()*3).toFixed(2);
+
+    balance += parseFloat(gain);
+    profit += parseFloat(gain);
+
+    if(balEl) balEl.innerText="$"+balance.toFixed(2);
+    if(profEl) profEl.innerText="+$"+profit.toFixed(2);
+
+    log("Trade +$"+gain);
+
+    setTimeout(run,4000);
+}
+
+setInterval(() => {
+
+    btcPrice += (Math.random()*200-100);
+
+    if(btcPrice < 60000) btcPrice = 60000;
+    if(btcPrice > 70000) btcPrice = 70000;
+
+    if(btcEl) btcEl.innerText="$"+btcPrice.toFixed(2);
+
+},3000);
+
+log("System loaded successfully");
+
+});
+</script>
+
+</body>
+</html>
