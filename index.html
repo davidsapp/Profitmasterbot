@@ -398,7 +398,151 @@ function updateMarket(){
     );
 
 }
+<!-- BOT STATUS -->
+<div class="card">
+
+    <h2>Bot Status</h2>
+
+    <div class="status">
+        <span>Connection</span>
+        <span class="green">
+            <span class="online"></span>
+            Connected
+        </span>
+    </div>
+
+    <div class="status">
+        <span>Trading Status</span>
+        <span id="tradeStatus" class="red">
+            Stopped
+        </span>
+    </div>
+
+    <div class="status">
+        <span>Exchange</span>
+        <span class="green">
+            Binance
+        </span>
+    </div>
+
+    <div class="status">
+        <span>BTC Price</span>
+        <span class="green" id="btcPrice">
+            $65000
+        </span>
+    </div>
+
+    <button class="start-btn" onclick="startBot()">
+        START BOT
+    </button>
+
+    <button class="pause-btn" onclick="pauseBot()">
+        PAUSE BOT
+    </button>
+
+    <button class="stop-btn" onclick="stopBot()">
+        STOP BOT
+    </button>
+
+</div>
+
+<script>
+
+let btcPrice = 65000;
+
+function updateMarket(){
+
+    const randomMove =
+    (Math.random() * 500 - 250);
+
+    btcPrice += randomMove;
+
+    document.getElementById(
+        "btcPrice"
+    ).innerHTML =
+    "$" + btcPrice.toFixed(2);
+
+    addLog(
+        "BTC/USDT updated: $" +
+        btcPrice.toFixed(2)
+    );
+
+}<!-- BOT STATUS -->
+<div class="card">
+
+    <h2>Bot Status</h2>
+
+    <div class="status">
+        <span>Connection</span>
+        <span class="green">
+            <span class="online"></span>
+            Connected
+        </span>
+    </div>
+
+    <div class="status">
+        <span>Trading Status</span>
+        <span id="tradeStatus" class="red">
+            Stopped
+        </span>
+    </div>
+
+    <div class="status">
+        <span>Exchange</span>
+        <span class="green">
+            Binance
+        </span>
+    </div>
+
+    <div class="status">
+        <span>BTC Price</span>
+        <span class="green" id="btcPrice">
+            $65000
+        </span>
+    </div>
+
+    <button class="start-btn" onclick="startBot()">
+        START BOT
+    </button>
+
+    <button class="pause-btn" onclick="pauseBot()">
+        PAUSE BOT
+    </button>
+
+    <button class="stop-btn" onclick="stopBot()">
+        STOP BOT
+    </button>
+
+</div>
+
+<script>
+
+let btcPrice = 65000;
+
+function updateMarket(){
+
+    const randomMove =
+    (Math.random() * 500 - 250);
+
+    btcPrice += randomMove;
+
+    document.getElementById(
+        "btcPrice"
+    ).innerHTML =
+    "$" + btcPrice.toFixed(2);
+
+    addLog(
+        "BTC/USDT updated: $" +
+        btcPrice.toFixed(2)
+    );
+
+}
 
 setInterval(updateMarket, 4000);
+
+</script>
+
+
+
 </body>
 </html>
