@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProfitMasterBot v6.5 Risk Engine</title>
+</head>
+
+<body style="margin:0;background:#050816;color:white;font-family:Arial;text-align:center;padding:15px;">
+
+<h1 style="color:#00ff99;">ProfitMasterBot v6.5 Risk Engine</h1>
+<p>Powered by David Maina</p>
+
+<hr style="border:1px solid #00ff99;">
+
+<h2>BTC Price</h2>
+<p id="btc" style="font-size:24px;color:#00ff99;">Loading...</p>
+
+<h2>AI Signal</h2>
+<p id="signal">WAITING</p>
+
+<h2>Balance</h2>
+<p id="balance">$100.00</p>
+
+<h2>Profit</h2>
+<p id="profit">+$0.00</p>
+
+<h2>Risk Status</h2>
+<p id="risk" style="color:#00ff99;">SAFE</p>
+
+<hr style="border:1px solid #00ff99;">
+
+<button onclick="startBot()" style="padding:15px;width:80%;background:#00ff99;border:none;font-weight:bold;">START BOT</button>
+
+<button onclick="stopBot()" style="padding:15px;width:80%;margin-top:10px;background:#ff4444;border:none;font-weight:bold;color:white;">STOP BOT</button>
+
+<script>
+
+let running = false;
+let balance = 100;
+let profit = 0;
+let btcPrice = 65000;
+
+/* RISK SETTINGS */
+const MAX_PROFIT = 15;
+const MAX_LOSS = -10;
+
+/* BTC PRICE */
+async function updateBTC(){
+    try {
+        const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd");
+        const data = await res.json();
+        btcPrice = data.bitcoin.usd;
+
+        document.getElementById("btc").innerText = "$" + btcPrice;
+
+    } catch (e) {
+        document.getElementById("btc").innerText = "Error";
+    }
+}
+
+/* AI SIGNAL */
+function getSignal(){
+
+    let r = Math.random();
+
+    if(r > 0.6) return "BUY";
+    if(r < 0.3) return "SELL";
+    return "WAITING";
+}
+
+/* RISK CHECK */
+function checkRisk(){
+
+    if(profit >= MAX_PROFIT){
+        document.getElementById("risk").innerText = "TAKE PROFIT HIT";
+        document.getElementById("risk").style.color = "#ffaa00";
+        stopBot();
+        return true;
+    }
+
+    if(profit <= MAX_LOSS){
+        document.getElementById("risk").innerText = "STOP LOSS HIT";
+        document.getElementById("risk").style.color = "#ff4444";
+        stopBot();
+        return true;
+    }
+
+    return false;
+}
+
+/* TRADING ENGINE */
+function tradeLoop(){
+
+    if(!running) return;
+
+    if(checkRisk()) return;
+
+    let signal = getSignal();
+    document.getElementById("signal").innerText = signal;
+
+    let gain = 0;
+
+    if(signal === "BUY") gain = Math.random() * 3;
+    else if(signal === "SELL") gain = Math.random() * 2;
+    else gain = Math.random() * 0.5;
+
+    balance += gain;
+    profit += gain;
+
+    document.getElementById("balance").innerText = "$" + balance.toFixed(2);
+    document.getElementById("profit").innerText = "+$" + profit.toFixed(2);
+
+    setTimeout(tradeLoop, 3000);
+}
+
+/* START */
+function startBot(){
+
+    running = true;
+
+    document.getElementById("risk").innerText = "SAFE";
+    document.getElementById("risk").style.color = "#00ff99";
+
+    updateBTC();
+    setInterval(updateBTC, 10000);
+
+    tradeLoop();
+}
+
+/* STOP */
+function stopBot(){
+    running = false;
+}
+
+</script>
+
+</body>
+</html>
