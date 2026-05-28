@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProfitMasterBot v6.7 LIVE MERGED</title>
+</head>
+
+<body style="margin:0;background:#050816;color:white;font-family:Arial;text-align:center;padding:15px;">
+
+<h1 style="color:#00ff99;">ProfitMasterBot v6.7 LIVE</h1>
+<p>Powered by David Maina</p>
+
+<hr style="border:1px solid #00ff99;">
+
+<h2>WebSocket Status</h2>
+<p id="conn" style="color:#ff4444;">DISCONNECTED</p>
+
+<h2>Live BTC Price</h2>
+<p id="btc" style="font-size:26px;color:#00ff99;">Waiting...</p>
+
+<h2>AI Signal</h2>
+<p id="signal">WAITING</p>
+
+<h2>Market Trend</h2>
+<p id="trend">ANALYZING...</p>
+
+<h2>Balance</h2>
+<p id="balance">$100.00</p>
+
+<h2>Profit</h2>
+<p id="profit">+$0.00</p>
+
+<h2>Risk Status</h2>
+<p id="risk" style="color:#00ff99;">SAFE</p>
+
+<hr style="border:1px solid #00ff99;">
+
+<button onclick="connectWS()" style="padding:15px;width:80%;background:#00ff99;border:none;font-weight:bold;">
+CONNECT BOT
+</button>
+
+<button onclick="disconnectWS()" style="padding:15px;width:80%;margin-top:10px;background:#ff4444;border:none;font-weight:bold;color:white;">
+STOP BOT
+</button>
+
+<script>
+
+let ws = null;
+let running = false;
+
+let balance = 100;
+let profit = 0;
+
+let prices = [];
+let lastPrice = 0;
+
+/* =========================
+   WEBSOCKET CONNECT
+========================= */
+
+function connectWS(){
+
+    if(ws) ws.close();
+
+    ws = new WebSocket("wss://stream.binance.com:9443/ws/btcusdt@trade");
+
+    ws.onopen = () => {
+        document.getElementById("conn").innerText = "CONNECTED";
+        document.getElementById("conn").style.color = "#00ff99";
+
+        running = true;
+    };
+
+    ws.onmessage = (event) => {
+
+        let data = JSON.parse(event.data);
+        lastPrice = parseFloat(data.p);
+
+        document.getElementById("btc").innerText = "$" + lastPrice.toFixed(2);
+
+        handleMarket(lastPrice);
+    };
+
+    ws.onclose = () => {
+        document.getElementById("conn").innerText = "DISCONNECTED";
+        document.getElementById("conn").style.color = "#ff4444";
+        running = false;
+    };
+}
+
+/* =========================
+   AI ENGINE
+========================= */
+
+function getTrend(){
+
+    if(prices.length < 5) return "NEUTRAL";
+
+    let up = 0;
+    let down = 0;
+
+    for(let i=1;i<prices.length;i++){
+        if(prices[i] > prices[i-1]) up++;
+        else down++;
+    }
+
+    if(up > down) return "UPTREND";
+    if(down > up) return "DOWNTREND";
+    return "SIDEWAYS";
+}
+
+function getSignal(trend){
+
+    if(trend === "UPTREND") return "BUY";
+    if(trend === "DOWNTREND") return "SELL";
+
+    return Math.random() > 0.5 ? "BUY" : "SELL";
+}
+
+/* =========================
+   RISK SYSTEM
+========================= */
+
+const MAX_PROFIT = 20;
+const MAX_LOSS = -10;
+
+function checkRisk(){
+
+    if(profit >= MAX_PROFIT){
+        document.getElementById("risk").innerText = "TAKE PROFIT HIT";
+        document.getElementById("risk").style.color = "#ffaa00";
+        disconnectWS();
+        return true;
+    }
+
+    if(profit <= MAX_LOSS){
+        document.getElementById("risk").innerText = "STOP LOSS HIT";
+        document.getElementById("risk").style.color = "#ff4444";
+        disconnectWS();
+        return true;
+    }
+
+    return false;
+}
+
+/* =========================
+   MAIN ENGINE (MERGED)
+========================= */
+
+function handleMarket(price){
+
+    if(!running) return;
+
+    prices.push(price);
+    if(prices.length > 20) prices.shift();
+
+    let trend = getTrend();
+    let signal = getSignal(trend);
+
+    document.getElementById("trend").innerText = trend;
+    document.getElementById("signal").innerText = signal;
+
+    if(checkRisk()) return;
+
+    executeTrade(signal);
+}
+
+/* =========================
+   TRADE EXECUTION
+========================= */
+
+function executeTrade(signal){
+
+    let gain = 0;
+
+    if(signal === "BUY"){
+        gain = Math.random() * 3.5;
+    }
+    else if(signal === "SELL"){
+        gain = Math.random() * 2.5;
+    }
+    else {
+        gain = Math.random() * 0.5;
+    }
+
+    balance += gain;
+    profit += gain;
+
+    document.getElementById("balance").innerText = "$" + balance.toFixed(2);
+    document.getElementById("profit").innerText = "+$" + profit.toFixed(2);
+}
+
+/* =========================
+   STOP
+========================= */
+
+function disconnectWS(){
+
+    if(ws){
+        ws.close();
+        ws = null;
+    }
+
+    running = false;
+}
+
+</script>
+
+</body>
+</html>
