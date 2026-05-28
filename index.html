@@ -379,7 +379,26 @@ slider.oninput = function(){
     sliderValue.innerHTML = this.value + "%";
 };
 
-</script>
+</script>// ===============================
+// LIVE BTC PRICE SIMULATION
+// ===============================
 
+let btcPrice = 65000;
+
+function updateMarket(){
+
+    const randomMove =
+    (Math.random() * 500 - 250);
+
+    btcPrice += randomMove;
+
+    addLog(
+        "BTC/USDT Price: $" +
+        btcPrice.toFixed(2)
+    );
+
+}
+
+setInterval(updateMarket, 4000);
 </body>
 </html>
