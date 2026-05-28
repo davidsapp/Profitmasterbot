@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProfitMasterBot v6.2</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, sans-serif;
+}
+
+body{
+    background:#050816;
+    color:white;
+    overflow-x:hidden;
+}
+
+/* HEADER */
+header{
+    background:#0b1026;
+    text-align:center;
+    padding:18px;
+    border-bottom:2px solid #00ff99;
+}
+
+header h1{
+    color:#00ff99;
+    font-size:26px;
+}
+
+header p{
+    color:#aaa;
+    margin-top:5px;
+}
+
+/* CONTAINER */
+.container{
+    padding:15px;
+}
+
+/* CARDS */
+.card{
+    background:#11182f;
+    border:1px solid #00ff99;
+    border-radius:14px;
+    padding:16px;
+    margin-bottom:15px;
+    box-shadow:0 0 10px rgba(0,255,153,0.1);
+}
+
+.card h2{
+    color:#00ff99;
+    margin-bottom:12px;
+}
+
+/* STATUS ROW */
+.status{
+    display:flex;
+    justify-content:space-between;
+    margin-top:8px;
+    font-size:15px;
+}
+
+.green{color:#00ff99;}
+.red{color:#ff4444;}
+.orange{color:#ffaa00;}
+
+/* BUTTONS */
+button{
+    width:100%;
+    padding:14px;
+    margin-top:10px;
+    border:none;
+    border-radius:10px;
+    font-size:16px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.start{background:#00ff99;color:black;}
+.pause{background:#ffaa00;color:black;}
+.stop{background:#ff4444;color:white;}
+
+/* BALANCE */
+.balance{
+    font-size:26px;
+    color:#00ff99;
+    margin-top:10px;
+}
+
+/* LOGS */
+.logs{
+    height:180px;
+    overflow-y:auto;
+    background:#08101f;
+    padding:10px;
+    border-radius:10px;
+    border:1px solid #00ff99;
+}
+
+.log{
+    font-size:13px;
+    margin-bottom:5px;
+    color:#ccc;
+}
+
+/* ONLINE DOT */
+.online{
+    width:10px;
+    height:10px;
+    background:#00ff99;
+    border-radius:50%;
+    display:inline-block;
+    margin-right:5px;
+    animation:pulse 1s infinite;
+}
+
+@keyframes pulse{
+    0%{opacity:1;}
+    50%{opacity:0.3;}
+    100%{opacity:1;}
+}
+
+.footer{
+    text-align:center;
+    color:#777;
+    padding:20px;
+    font-size:13px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+<h1>ProfitMasterBot v6.2</h1>
+<p>Powered by David Maina</p>
+</header>
+
+<div class="container">
+
+<!-- BOT STATUS -->
+<div class="card">
+<h2>Bot Status</h2>
+
+<div class="status">
+<span>Connection</span>
+<span class="green"><span class="online"></span>Connected</span>
+</div>
+
+<div class="status">
+<span>Trading Status</span>
+<span id="status" class="red">Stopped</span>
+</div>
+
+<div class="status">
+<span>Exchange</span>
+<span class="green">Binance</span>
+</div>
+
+<div class="status">
+<span>BTC Price</span>
+<span class="green" id="btcPrice">$65000</span>
+</div>
+
+<button class="start" onclick="startBot()">START BOT</button>
+<button class="pause" onclick="pauseBot()">PAUSE BOT</button>
+<button class="stop" onclick="stopBot()">STOP BOT</button>
+</div>
+
+<!-- BALANCE -->
+<div class="card">
+<h2>Account Balance</h2>
+<div class="balance" id="balance">$100.00</div>
+
+<div class="status">
+<span>Today's Profit</span>
+<span class="green" id="profit">+$0.00</span>
+</div>
+</div>
+
+<!-- LOGS -->
+<div class="card">
+<h2>Live Logs</h2>
+<div class="logs" id="logs"></div>
+</div>
+
+</div>
+
+<div class="footer">
+ProfitMasterBot v6.2 © 2026
+</div>
+
+<script>
+
+let running = false;
+let balance = 100;
+let profit = 0;
+let btcPrice = 65000;
+
+const status = document.getElementById("status");
+const logs = document.getElementById("logs");
+
+function addLog(msg){
+    const div = document.createElement("div");
+    div.className = "log";
+    div.innerText = "[" + new Date().toLocaleTimeString() + "] " + msg;
+    logs.prepend(div);
+}
+
+function startBot(){
+    if(running) return;
+    running = true;
+    status.innerText = "Running";
+    status.className = "green";
+    addLog("Bot started");
+    tradeLoop();
+}
+
+function pauseBot(){
+    running = false;
+    status.innerText = "Paused";
+    status.className = "orange";
+    addLog("Bot paused");
+}
+
+function stopBot(){
+    running = false;
+    status.innerText = "Stopped";
+    status.className = "red";
+    addLog("Bot stopped");
+}
+
+/* SIMULATED TRADING */
+function tradeLoop(){
+    if(!running) return;
+
+    let gain = (Math.random() * 5).toFixed(2);
+    balance += parseFloat(gain);
+    profit += parseFloat(gain);
+
+    document.getElementById("balance").innerText = "$" + balance.toFixed(2);
+    document.getElementById("profit").innerText = "+$" + profit.toFixed(2);
+
+    addLog("Trade profit +$" + gain);
+
+    setTimeout(tradeLoop, 4000);
+}
+
+/* LIVE BTC PRICE (SIMULATION) */
+function updatePrice(){
+    btcPrice += (Math.random() * 400 - 200);
+    document.getElementById("btcPrice").innerText = "$" + btcPrice.toFixed(2);
+}
+
+setInterval(updatePrice, 3000);
+
+addLog("System initialized");
+
+</script>
+
+</body>
+</html>
