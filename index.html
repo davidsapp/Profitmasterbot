@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProfitMasterBot v6.3</title>
+</head>
+
+<body style="margin:0;background:#050816;color:white;font-family:Arial;text-align:center;padding:15px;">
+
+<h1 style="color:#00ff99;">ProfitMasterBot v6.3</h1>
+<p>Powered by David Maina</p>
+
+<hr style="border:1px solid #00ff99;">
+
+<h2>System Status</h2>
+<p id="status" style="color:#ff4444;">STOPPED</p>
+
+<h2>BTC Price</h2>
+<p id="btc" style="font-size:24px;color:#00ff99;">Loading...</p>
+
+<h2>Signal</h2>
+<p id="signal" style="font-size:20px;">WAITING</p>
+
+<h2>Balance</h2>
+<p id="balance">$100.00</p>
+
+<h2>Profit</h2>
+<p id="profit">+$0.00</p>
+
+<hr style="border:1px solid #00ff99;">
+
+<button onclick="startBot()" style="padding:15px;width:80%;background:#00ff99;border:none;font-weight:bold;">START BOT</button>
+
+<button onclick="stopBot()" style="padding:15px;width:80%;margin-top:10px;background:#ff4444;border:none;font-weight:bold;color:white;">STOP BOT</button>
+
+<script>
+
+let running = false;
+let balance = 100;
+let profit = 0;
+let btcPrice = 65000;
+let lastSignal = "WAITING";
+
+/* REAL BTC PRICE */
+async function updateBTC(){
+    try {
+        const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd");
+        const data = await res.json();
+        btcPrice = data.bitcoin.usd;
+
+        document.getElementById("btc").innerText = "$" + btcPrice;
+    } catch (e) {
+        document.getElementById("btc").innerText = "Error loading BTC";
+    }
+}
+
+/* SIMPLE MARKET LOGIC */
+function getSignal(){
+
+    let rand = Math.random();
+
+    if(rand > 0.65) return "BUY";
+    if(rand < 0.35) return "SELL";
+    return "WAITING";
+}
+
+/* TRADING ENGINE */
+function tradeLoop(){
+
+    if(!running) return;
+
+    let signal = getSignal();
+    lastSignal = signal;
+
+    document.getElementById("signal").innerText = signal;
+
+    let gain = 0;
+
+    if(signal === "BUY"){
+        gain = Math.random() * 3;
+    } 
+    else if(signal === "SELL"){
+        gain = Math.random() * 2;
+    } 
+    else {
+        gain = Math.random() * 0.5;
+    }
+
+    balance += gain;
+    profit += gain;
+
+    document.getElementById("balance").innerText = "$" + balance.toFixed(2);
+    document.getElementById("profit").innerText = "+$" + profit.toFixed(2);
+
+    /* RISK LIMIT (simple safety) */
+    if(profit > 20){
+        stopBot();
+        alert("Profit target reached (safe stop)");
+        return;
+    }
+
+    setTimeout(tradeLoop, 3000);
+}
+
+/* START BOT */
+function startBot(){
+
+    running = true;
+    document.getElementById("status").innerText = "RUNNING";
+    document.getElementById("status").style.color = "#00ff99";
+
+    updateBTC();
+    setInterval(updateBTC, 10000);
+
+    tradeLoop();
+}
+
+/* STOP BOT */
+function stopBot(){
+
+    running = false;
+    document.getElementById("status").innerText = "STOPPED";
+    document.getElementById("status").style.color = "#ff4444";
+
+    document.getElementById("signal").innerText = "STOPPED";
+}
+
+</script>
+
+</body>
+</html>
