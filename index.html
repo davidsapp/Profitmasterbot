@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProfitMasterBot v6.3</title>
+</head>
+
+<body style="margin:0;background:#050816;color:white;font-family:Arial;text-align:center;padding:15px;">
+
+<h1 style="color:#00ff99;">ProfitMasterBot v6.3</h1>
+<p>Powered by David Maina</p>
+
+<hr style="border:1px solid #00ff99;">
+
+<h2>BTC Price</h2>
+<p id="btc" style="font-size:24px;color:#00ff99;">Loading...</p>
+
+<h2>Signal</h2>
+<p id="signal">WAITING</p>
+
+<h2>Balance</h2>
+<p id="balance">$100.00</p>
+
+<h2>Profit</h2>
+<p id="profit">+$0.00</p>
+
+<hr style="border:1px solid #00ff99;">
+
+<h2>Live BTC Chart</h2>
+<canvas id="chart" width="320" height="120" style="background:#08101f;border:1px solid #00ff99;border-radius:10px;"></canvas>
+
+<br><br>
+
+<button onclick="startBot()" style="padding:15px;width:80%;background:#00ff99;border:none;font-weight:bold;">START BOT</button>
+
+<button onclick="stopBot()" style="padding:15px;width:80%;margin-top:10px;background:#ff4444;border:none;font-weight:bold;color:white;">STOP BOT</button>
+
+<script>
+
+let running = false;
+let balance = 100;
+let profit = 0;
+let btcPrice = 65000;
+
+let priceHistory = [];
+
+/* BTC PRICE */
+async function updateBTC(){
+    try {
+        const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd");
+        const data = await res.json();
+
+        btcPrice = data.bitcoin.usd;
+        document.getElementById("btc").innerText = "$" + btcPrice;
+
+        updateChart();
+
+    } catch (e) {
+        document.getElementById("btc").innerText = "Error";
+    }
+}
+
+/* SIGNAL SYSTEM */
+function getSignal(){
+    let r = Math.random();
+    if(r > 0.6) return "BUY";
+    if(r < 0.3) return "SELL";
+    return "WAITING";
+}
+
+/* TRADING */
+function tradeLoop(){
+
+    if(!running) return;
+
+    let signal = getSignal();
+    document.getElementById("signal").innerText = signal;
+
+    let gain = (signal === "BUY") ? Math.random()*3 :
+               (signal === "SELL") ? Math.random()*2 :
+               Math.random()*0.5;
+
+    balance += gain;
+    profit += gain;
+
+    document.getElementById("balance").innerText = "$" + balance.toFixed(2);
+    document.getElementById("profit").innerText = "+$" + profit.toFixed(2);
+
+    setTimeout(tradeLoop, 3000);
+}
+
+/* CHART SYSTEM */
+function updateChart(){
+
+    priceHistory.push(btcPrice);
+
+    if(priceHistory.length > 20){
+        priceHistory.shift();
+    }
+
+    drawChart();
+}
+
+function drawChart(){
+
+    const canvas = document.getElementById("chart");
+    const ctx = canvas.getContext("2d");
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    ctx.strokeStyle = "#00ff99";
+    ctx.beginPath();
+
+    let step = canvas.width / priceHistory.length;
+
+    priceHistory.forEach((p, i) => {
+        let x = i * step;
+        let y = canvas.height - (p % 1000) / 5;
+
+        if(i === 0) ctx.moveTo(x,y);
+        else ctx.lineTo(x,y);
+    });
+
+    ctx.stroke();
+}
+
+/* START */
+function startBot(){
+    if(running) return;
+
+    running = true;
+
+    updateBTC();
+    setInterval(updateBTC, 10000);
+
+    tradeLoop();
+}
+
+/* STOP */
+function stopBot(){
+    running = false;
+}
+
+</script>
+
+</body>
+</html>
