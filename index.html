@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>ProfitMasterBot v6.2</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    background:#050816;
+    color:white;
+    font-family:Arial, sans-serif;
+    overflow-x:hidden;
+}
+
+header{
+    background:#0b1026;
+    padding:18px;
+    text-align:center;
+    border-bottom:2px solid #00ff99;
+}
+
+header h1{
+    color:#00ff99;
+    font-size:28px;
+}
+
+header p{
+    color:#ccc;
+    margin-top:5px;
+}
+
+.container{
+    padding:15px;
+}
+
+.card{
+    background:#11182f;
+    border:1px solid #00ff99;
+    border-radius:14px;
+    padding:18px;
+    margin-bottom:18px;
+    box-shadow:0 0 10px rgba(0,255,153,0.2);
+}
+
+.card h2{
+    color:#00ff99;
+    margin-bottom:15px;
+    font-size:22px;
+}
+
+.status{
+    display:flex;
+    justify-content:space-between;
+    margin-top:10px;
+    font-size:16px;
+}
+
+.green{
+    color:#00ff99;
+}
+
+.red{
+    color:#ff4444;
+}
+
+button{
+    width:100%;
+    padding:15px;
+    margin-top:12px;
+    border:none;
+    border-radius:10px;
+    font-size:17px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.start-btn{
+    background:#00ff99;
+    color:black;
+}
+
+.stop-btn{
+    background:#ff4444;
+    color:white;
+}
+
+.pause-btn{
+    background:#ffaa00;
+    color:black;
+}
+
+button:hover{
+    opacity:0.9;
+    transform:scale(1.02);
+}
+
+.input-group{
+    margin-top:12px;
+}
+
+.input-group label{
+    display:block;
+    margin-bottom:6px;
+    color:#ccc;
+}
+
+.input-group input,
+.input-group select{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    background:#1d2747;
+    color:white;
+    font-size:16px;
+}
+
+.profit-box{
+    font-size:28px;
+    color:#00ff99;
+    margin-top:10px;
+    font-weight:bold;
+}
+
+.logs{
+    height:200px;
+    overflow-y:auto;
+    background:#08101f;
+    padding:10px;
+    border-radius:10px;
+    margin-top:10px;
+    border:1px solid #00ff99;
+}
+
+.log{
+    margin-bottom:8px;
+    font-size:14px;
+    color:#ccc;
+}
+
+.footer{
+    text-align:center;
+    padding:20px;
+    color:#888;
+    font-size:14px;
+}
+
+.online{
+    width:12px;
+    height:12px;
+    background:#00ff99;
+    border-radius:50%;
+    display:inline-block;
+    margin-right:5px;
+    animation:pulse 1s infinite;
+}
+
+@keyframes pulse{
+    0%{opacity:1;}
+    50%{opacity:0.3;}
+    100%{opacity:1;}
+}
+
+.slider-value{
+    margin-top:10px;
+    color:#00ff99;
+    font-size:18px;
+    font-weight:bold;
+}
+
+.range{
+    width:100%;
+    margin-top:10px;
+}
+
+.chart{
+    height:120px;
+    display:flex;
+    align-items:flex-end;
+    gap:10px;
+    margin-top:15px;
+}
+
+.bar{
+    flex:1;
+    background:#00ff99;
+    border-radius:6px 6px 0 0;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>ProfitMasterBot v6.2</h1>
+    <p>Powered by David Maina</p>
+</header>
+
+<div class="container">
+
+    <!-- BOT STATUS -->
+    <div class="card">
+        <h2>Bot Status</h2>
+
+        <div class="status">
+            <span>Connection</span>
+            <span class="green">
+                <span class="online"></span>
+                Connected
+            </span>
+        </div>
+
+        <div class="status">
+            <span>Trading Status</span>
+            <span id="tradeStatus" class="red">Stopped</span>
+        </div>
+
+        <div class="status">
+            <span>Exchange</span>
+            <span class="green">Binance</span>
+        </div>
+
+        <button class="start-btn" onclick="startBot()">START BOT</button>
+        <button class="pause-btn" onclick="pauseBot()">PAUSE BOT</button>
+        <button class="stop-btn" onclick="stopBot()">STOP BOT</button>
+    </div>
+
+    <!-- BALANCE -->
+    <div class="card">
+        <h2>Account Balance</h2>
+
+        <div class="profit-box" id="balance">
+            $100.00
+        </div>
+
+        <div class="status">
+            <span>Today's Profit</span>
+            <span class="green" id="profitToday">+$0.00</span>
+        </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="card">
+        <h2>Trading Settings</h2>
+
+        <div class="input-group">
+            <label>Trading Pair</label>
+            <select>
+                <option>BTC/USDT</option>
+                <option>ETH/USDT</option>
+                <option>BNB/USDT</option>
+                <option>SOL/USDT</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label>Trade Amount (%)</label>
+            <input type="range" min="1" max="100" value="20" class="range" id="tradeSlider"/>
+            <div class="slider-value" id="sliderValue">20%</div>
+        </div>
+
+        <div class="input-group">
+            <label>Daily Return Target</label>
+            <input type="number" value="5.5"/>
+        </div>
+    </div>
+
+    <!-- LIVE TRADE LOGS -->
+    <div class="card">
+        <h2>Live Trade Logs</h2>
+
+        <div class="logs" id="logs">
+            <div class="log">System initialized...</div>
+            <div class="log">Awaiting market signal...</div>
+        </div>
+    </div>
+
+    <!-- PERFORMANCE -->
+    <div class="card">
+        <h2>Weekly Performance</h2>
+
+        <div class="chart">
+            <div class="bar" style="height:30%"></div>
+            <div class="bar" style="height:50%"></div>
+            <div class="bar" style="height:70%"></div>
+            <div class="bar" style="height:45%"></div>
+            <div class="bar" style="height:85%"></div>
+            <div class="bar" style="height:65%"></div>
+            <div class="bar" style="height:95%"></div>
+        </div>
+    </div>
+
+</div>
+
+<div class="footer">
+    ProfitMasterBot Version 6.2 © 2026
+</div>
+
+<script>
+
+let running = false;
+let balance = 100;
+let profit = 0;
+
+const tradeStatus = document.getElementById("tradeStatus");
+const balanceText = document.getElementById("balance");
+const profitText = document.getElementById("profitToday");
+const logs = document.getElementById("logs");
+
+function addLog(message){
+    const log = document.createElement("div");
+    log.className = "log";
+
+    const time = new Date().toLocaleTimeString();
+
+    log.innerHTML = "[" + time + "] " + message;
+
+    logs.prepend(log);
+}
+
+function startBot(){
+    running = true;
+    tradeStatus.innerHTML = "Running";
+    tradeStatus.className = "green";
+
+    addLog("Trading bot started.");
+
+    simulateTrading();
+}
+
+function pauseBot(){
+    running = false;
+
+    tradeStatus.innerHTML = "Paused";
+    tradeStatus.className = "red";
+
+    addLog("Trading paused.");
+}
+
+function stopBot(){
+    running = false;
+
+    tradeStatus.innerHTML = "Stopped";
+    tradeStatus.className = "red";
+
+    addLog("Trading stopped.");
+}
+
+function simulateTrading(){
+
+    if(!running) return;
+
+    const randomProfit = (Math.random() * 5).toFixed(2);
+
+    balance += parseFloat(randomProfit);
+    profit += parseFloat(randomProfit);
+
+    balanceText.innerHTML = "$" + balance.toFixed(2);
+    profitText.innerHTML = "+$" + profit.toFixed(2);
+
+    addLog("Trade completed successfully. Profit +$" + randomProfit);
+
+    setTimeout(simulateTrading, 5000);
+}
+
+const slider = document.getElementById("tradeSlider");
+const sliderValue = document.getElementById("sliderValue");
+
+slider.oninput = function(){
+    sliderValue.innerHTML = this.value + "%";
+};
+
+</script>
+
+</body>
+</html>
