@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ProfitMasterBot v7.9 MULTI COIN</title>
+
+<style>
+
+body{
+    margin:0;
+    background:#050816;
+    color:white;
+    font-family:Arial;
+    padding:15px;
+}
+
+.header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:15px;
+}
+
+.logo{
+    color:#00ff99;
+    font-size:22px;
+    font-weight:bold;
+}
+
+.status{
+    color:#00ff99;
+    font-size:13px;
+}
+
+/* COIN SELECTOR */
+
+.selector{
+    display:flex;
+    gap:10px;
+    margin-bottom:15px;
+}
+
+.coinBtn{
+    flex:1;
+    padding:10px;
+    border:none;
+    border-radius:10px;
+    background:#11182f;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.active{
+    background:#00ff99;
+    color:black;
+}
+
+/* CARDS */
+
+.card{
+    background:#11182f;
+    border-radius:14px;
+    padding:15px;
+    margin-bottom:15px;
+}
+
+.title{
+    color:#00ff99;
+    margin-bottom:10px;
+}
+
+.value{
+    font-size:22px;
+}
+
+/* SIGNAL */
+
+.signal{
+    font-size:18px;
+    font-weight:bold;
+    margin-top:10px;
+}
+
+.buy{color:#00ff99;}
+.sell{color:#ff4444;}
+.wait{color:#ffaa00;}
+
+/* CHART */
+
+canvas{
+    width:100%;
+    background:#08101f;
+    border-radius:10px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <div class="logo">Multi Coin AI v7.9</div>
+    <div class="status" id="status">OFFLINE</div>
+</div>
+
+<!-- COIN SELECTOR -->
+
+<div class="selector">
+
+    <button class="coinBtn active" onclick="switchCoin('btcusdt')">BTC</button>
+    <button class="coinBtn" onclick="switchCoin('ethusdt')">ETH</button>
+    <button class="coinBtn" onclick="switchCoin('solusdt')">SOL</button>
+
+</div>
+
+<div class="card">
+    <div class="title">Selected Coin</div>
+    <div class="value" id="coin">BTC/USDT</div>
+
+    <div class="value" id="price">$0</div>
+    <div id="signal" class="signal wait">WAITING</div>
+</div>
+
+<div class="card">
+    <div class="title">Live Chart</div>
+    <canvas id="chart" height="160"></canvas>
+</div>
+
+<script>
+
+let ws;
+
+let currentSymbol = "btcusdt";
+
+/* =========================
+   SEPARATE MEMORY PER COIN
+========================= */
+
+let dataStore = {
+    btcusdt: { prices: [], signal: "WAIT" },
+    ethusdt: { prices: [], signal: "WAIT" },
+    solusdt: { prices: [], signal: "WAIT" }
+};
+
+/* =========================
+   CONNECT WS
+========================= */
+
+function connect(symbol){
+
+    if(ws) ws.close();
+
+    ws = new WebSocket(
+        "wss://stream.binance.com:9443/ws/" + symbol + "@trade"
+    );
+
+    ws.onopen = () => {
+        document.getElementById("status").innerText = "LIVE";
+    };
+
+    ws.onmessage = (event) => {
+
+        let data = JSON.parse(event.data);
+        let price = parseFloat(data.p);
+
+        document.getElementById("price").innerText =
+        "$" + price.toFixed(2);
+
+        let store = dataStore[currentSymbol];
+
+        store.prices.push(price);
+
+        if(store.prices.length > 60){
+            store.prices.shift();
+        }
+
+        runAI(currentSymbol);
+
+        drawChart(currentSymbol);
+    };
+}
+
+/* =========================
+   SWITCH COIN
+========================= */
+
+function switchCoin(symbol){
+
+    currentSymbol = symbol;
+
+    document.getElementById("coin").innerText =
+    symbol.toUpperCase();
+
+    let buttons = document.querySelectorAll(".coinBtn");
+
+    buttons.forEach(b => b.classList.remove("active"));
+
+    event.target.classList.add("active");
+
+    connect(symbol);
+}
+
+/* =========================
+   AI PER COIN
+========================= */
+
+function runAI(symbol){
+
+    let store = dataStore[symbol];
+
+    let prices = store.prices;
+
+    if(prices.length < 10) return;
+
+    let up = 0;
+    let down = 0;
+
+    for(let i=1;i<prices.length;i++){
+        if(prices[i] > prices[i-1]) up++;
+        else down++;
+    }
+
+    let trend = (up - down) / prices.length;
+
+    let max = Math.max(...prices);
+    let min = Math.min(...prices);
+
+    let volatility = (max - min) / min;
+
+    let signal = "WAIT";
+    let cls = "wait";
+
+    if(volatility < 0.015){
+
+        if(trend > 0.03){
+            signal = "BUY";
+            cls = "buy";
+        }
+
+        else if(trend < -0.03){
+            signal = "SELL";
+            cls = "sell";
+        }
+    }
+
+    store.signal = signal;
+
+    document.getElementById("signal").innerText = signal;
+    document.getElementById("signal").className = "signal " + cls;
+}
+
+/* =========================
+   CHART PER COIN
+========================= */
+
+function drawChart(symbol){
+
+    let prices = dataStore[symbol].prices;
+
+    const canvas = document.getElementById("chart");
+    const ctx = canvas.getContext("2d");
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    if(prices.length < 2) return;
+
+    let min = Math.min(...prices);
+    let max = Math.max(...prices);
+    let range = max - min || 1;
+
+    let step = canvas.width / (prices.length - 1);
+
+    ctx.beginPath();
+    ctx.strokeStyle = "#00ff99";
+    ctx.lineWidth = 2;
+
+    prices.forEach((p,i)=>{
+
+        let x = i * step;
+        let y = canvas.height - ((p-min)/range)*canvas.height;
+
+        if(i === 0) ctx.moveTo(x,y);
+        else ctx.lineTo(x,y);
+    });
+
+    ctx.stroke();
+}
+
+/* =========================
+   INIT
+========================= */
+
+connect(currentSymbol);
+
+</script>
+
+</body>
+</html>
