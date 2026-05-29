@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProfitMasterBot v6.8 Charts</title>
+</head>
+
+<body style="margin:0;background:#050816;color:white;font-family:Arial;text-align:center;padding:15px;">
+
+<h1 style="color:#00ff99;">ProfitMasterBot v6.8</h1>
+<p>Powered by David Maina</p>
+
+<hr style="border:1px solid #00ff99;">
+
+<h2>WebSocket Status</h2>
+<p id="conn" style="color:#ff4444;">DISCONNECTED</p>
+
+<h2>Live BTC Price</h2>
+<p id="btc" style="font-size:26px;color:#00ff99;">Waiting...</p>
+
+<h2>AI Signal</h2>
+<p id="signal">WAITING</p>
+
+<hr style="border:1px solid #00ff99;">
+
+<h2>Live Market Chart</h2>
+<canvas id="chart" width="340" height="140"
+style="background:#08101f;border:1px solid #00ff99;border-radius:10px;"></canvas>
+
+<br><br>
+
+<button onclick="connectWS()"
+style="padding:15px;width:80%;background:#00ff99;border:none;font-weight:bold;">
+START LIVE CHART
+</button>
+
+<button onclick="disconnectWS()"
+style="padding:15px;width:80%;margin-top:10px;background:#ff4444;border:none;font-weight:bold;color:white;">
+STOP
+</button>
+
+<script>
+
+let ws = null;
+let prices = [];
+let lastPrice = 0;
+
+/* =========================
+   WEBSOCKET CONNECTION
+========================= */
+
+function connectWS(){
+
+    if(ws) ws.close();
+
+    ws = new WebSocket("wss://stream.binance.com:9443/ws/btcusdt@trade");
+
+    ws.onopen = () => {
+        document.getElementById("conn").innerText = "CONNECTED";
+        document.getElementById("conn").style.color = "#00ff99";
+    };
+
+    ws.onmessage = (event) => {
+
+        let data = JSON.parse(event.data);
+        lastPrice = parseFloat(data.p);
+
+        document.getElementById("btc").innerText = "$" + lastPrice.toFixed(2);
+
+        updateChart(lastPrice);
+        updateSignal();
+    };
+
+    ws.onclose = () => {
+        document.getElementById("conn").innerText = "DISCONNECTED";
+        document.getElementById("conn").style.color = "#ff4444";
+    };
+}
+
+/* =========================
+   SIMPLE SIGNAL (VISUAL ONLY)
+========================= */
+
+function updateSignal(){
+
+    if(prices.length < 5) return;
+
+    let up = 0;
+    let down = 0;
+
+    for(let i=1;i<prices.length;i++){
+        if(prices[i] > prices[i-1]) up++;
+        else down++;
+    }
+
+    let signal = "WAITING";
+
+    if(up > down) signal = "BUY";
+    if(down > up) signal = "SELL";
+
+    document.getElementById("signal").innerText = signal;
+}
+
+/* =========================
+   SMOOTH CHART ENGINE
+========================= */
+
+function updateChart(price){
+
+    prices.push(price);
+
+    if(prices.length > 25){
+        prices.shift();
+    }
+
+    drawChart();
+}
+
+function drawChart(){
+
+    const canvas = document.getElementById("chart");
+    const ctx = canvas.getContext("2d");
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    if(prices.length < 2) return;
+
+    let min = Math.min(...prices);
+    let max = Math.max(...prices);
+
+    let range = max - min || 1;
+
+    let step = canvas.width / (prices.length - 1);
+
+    ctx.strokeStyle = "#00ff99";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+
+    prices.forEach((p,i)=>{
+
+        let x = i * step;
+        let y = canvas.height - ((p - min) / range) * canvas.height;
+
+        if(i === 0) ctx.moveTo(x,y);
+        else ctx.lineTo(x,y);
+    });
+
+    ctx.stroke();
+}
+
+/* =========================
+   STOP
+========================= */
+
+function disconnectWS(){
+    if(ws){
+        ws.close();
+        ws = null;
+    }
+}
+
+</script>
+
+</body>
+</html>
