@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProfitMasterBot v9 SAFE</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:#050816;
+    color:white;
+}
+
+/* HEADER */
+.header{
+    display:flex;
+    justify-content:space-between;
+    padding:15px;
+    background:#0b1024;
+}
+.logo{
+    color:#00ff99;
+    font-weight:bold;
+}
+.tabbar{
+    display:flex;
+    gap:10px;
+    padding:10px;
+    background:#0b1024;
+}
+.tab{
+    padding:8px 12px;
+    background:#11182f;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:13px;
+}
+.tab.active{
+    background:#00ff99;
+    color:black;
+}
+
+/* SECTIONS */
+.section{
+    display:none;
+    padding:15px;
+}
+.section.active{
+    display:block;
+}
+
+/* CARDS */
+.card{
+    background:#11182f;
+    padding:15px;
+    border-radius:12px;
+    margin-bottom:15px;
+}
+
+/* SIGNAL */
+.buy{color:#00ff99;}
+.sell{color:#ff4444;}
+.wait{color:#ffaa00;}
+
+/* INPUTS */
+input, select{
+    width:100%;
+    padding:10px;
+    margin-top:8px;
+    border-radius:8px;
+    border:none;
+    outline:none;
+}
+
+/* BUTTON */
+button{
+    padding:10px;
+    background:#00ff99;
+    border:none;
+    border-radius:8px;
+    margin-top:10px;
+    cursor:pointer;
+}
+
+/* TABLE */
+table{
+    width:100%;
+    margin-top:10px;
+    border-collapse:collapse;
+}
+td, th{
+    border:1px solid #222;
+    padding:8px;
+    font-size:12px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <div class="logo">ProfitMasterBot v9 SAFE</div>
+</div>
+
+<!-- TAB MENU -->
+<div class="tabbar">
+    <div class="tab active" onclick="showTab('dash')">Dashboard</div>
+    <div class="tab" onclick="showTab('convert')">Converter</div>
+    <div class="tab" onclick="showTab('mpesa')">M-Pesa</div>
+</div>
+
+<!-- ================= DASHBOARD ================= -->
+<div id="dash" class="section active">
+
+    <div class="card">
+        <h3>AI Market Dashboard</h3>
+        <div>BTC/USDT Price:</div>
+        <h2 id="price">$0</h2>
+
+        <div id="signal" class="wait">WAIT</div>
+    </div>
+
+</div>
+
+<!-- ================= CONVERTER ================= -->
+<div id="convert" class="section">
+
+    <div class="card">
+        <h3>USD ↔ KSH Converter</h3>
+
+        <label>USD Amount</label>
+        <input type="number" id="usd" placeholder="Enter USD">
+
+        <button onclick="convert()">Convert</button>
+
+        <h3 id="result">KES: 0</h3>
+        <p id="rate">Rate loading...</p>
+    </div>
+
+</div>
+
+<!-- ================= MPESA ================= -->
+<div id="mpesa" class="section">
+
+    <div class="card">
+        <h3>M-Pesa Admin Panel</h3>
+
+        <p><b>Till Number:</b> <span id="till">9210444</span></p>
+
+        <label>Customer Name</label>
+        <input type="text" id="name">
+
+        <label>Amount</label>
+        <input type="number" id="amount">
+
+        <button onclick="addPayment()">Add Payment</button>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="payments"></tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+
+/* ======================
+   TAB SYSTEM
+====================== */
+function showTab(tab){
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+
+    document.getElementById(tab).classList.add('active');
+    event.target.classList.add('active');
+}
+
+/* ======================
+   BTC LIVE (Binance)
+====================== */
+let ws = new WebSocket("wss://stream.binance.com:9443/ws/btcusdt@trade");
+
+ws.onmessage = (event)=>{
+    let data = JSON.parse(event.data);
+    let price = parseFloat(data.p);
+    document.getElementById("price").innerText = "$" + price.toFixed(2);
+
+    // simple signal
+    if(price % 2 === 0){
+        document.getElementById("signal").innerText = "BUY";
+        document.getElementById("signal").className = "buy";
+    } else {
+        document.getElementById("signal").innerText = "WAIT";
+        document.getElementById("signal").className = "wait";
+    }
+}
+
+/* ======================
+   USD → KSH CONVERTER
+====================== */
+let exchangeRate = 0;
+
+async function loadRate(){
+    try{
+        let res = await fetch("https://api.exchangerate.host/latest?base=USD&symbols=KES");
+        let data = await res.json();
+        exchangeRate = data.rates.KES;
+        document.getElementById("rate").innerText = "1 USD = " + exchangeRate + " KES";
+    }catch(e){
+        document.getElementById("rate").innerText = "Rate failed to load";
+    }
+}
+loadRate();
+
+function convert(){
+    let usd = document.getElementById("usd").value;
+    let kes = usd * exchangeRate;
+    document.getElementById("result").innerText = "KES: " + kes.toFixed(2);
+}
+
+/* ======================
+   MPESA ADMIN (LOCAL)
+====================== */
+let payments = [];
+
+function addPayment(){
+    let name = document.getElementById("name").value;
+    let amount = document.getElementById("amount").value;
+
+    payments.push({
+        name:name,
+        amount:amount,
+        status:"Pending"
+    });
+
+    renderPayments();
+}
+
+function renderPayments(){
+    let table = document.getElementById("payments");
+    table.innerHTML = "";
+
+    payments.forEach(p=>{
+        table.innerHTML += `
+            <tr>
+                <td>${p.name}</td>
+                <td>${p.amount}</td>
+                <td>${p.status}</td>
+            </tr>
+        `;
+    });
+}
+
+</script>
+
+</body>
+</html>
