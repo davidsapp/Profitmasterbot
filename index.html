@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProfitMasterBot v7.0</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial;
+}
+
+body{
+    background:#050816;
+    color:white;
+    padding:15px;
+}
+
+/* HEADER */
+
+.header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+}
+
+.logo{
+    font-size:26px;
+    font-weight:bold;
+    color:#00ff99;
+}
+
+.status{
+    color:#00ff99;
+    font-size:14px;
+}
+
+/* BALANCE CARD */
+
+.balance-card{
+    background:linear-gradient(135deg,#00ff99,#008855);
+    padding:20px;
+    border-radius:18px;
+    margin-bottom:20px;
+    color:black;
+}
+
+.balance-title{
+    font-size:15px;
+    margin-bottom:10px;
+}
+
+.balance-amount{
+    font-size:34px;
+    font-weight:bold;
+}
+
+.profit{
+    margin-top:10px;
+    font-size:16px;
+}
+
+/* GRID */
+
+.grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:15px;
+    margin-bottom:20px;
+}
+
+.card{
+    background:#11182f;
+    border-radius:16px;
+    padding:15px;
+    border:1px solid #1d2747;
+}
+
+.card-title{
+    font-size:14px;
+    color:#999;
+    margin-bottom:10px;
+}
+
+.card-value{
+    font-size:22px;
+    color:#00ff99;
+    font-weight:bold;
+}
+
+/* CHART */
+
+.chart-box{
+    background:#11182f;
+    border-radius:16px;
+    padding:15px;
+    margin-bottom:20px;
+}
+
+canvas{
+    width:100%;
+    background:#08101f;
+    border-radius:10px;
+    margin-top:15px;
+}
+
+/* BUTTONS */
+
+.btn{
+    width:100%;
+    padding:15px;
+    border:none;
+    border-radius:14px;
+    font-size:16px;
+    font-weight:bold;
+    margin-top:10px;
+}
+
+.start{
+    background:#00ff99;
+    color:black;
+}
+
+.stop{
+    background:#ff4444;
+    color:white;
+}
+
+/* FOOTER NAV */
+
+.footer{
+    position:fixed;
+    bottom:0;
+    left:0;
+    width:100%;
+    background:#0b1026;
+    display:flex;
+    justify-content:space-around;
+    padding:12px;
+    border-top:1px solid #1d2747;
+}
+
+.nav-item{
+    color:#888;
+    font-size:13px;
+}
+
+.active{
+    color:#00ff99;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+
+<div class="header">
+    <div class="logo">ProfitMasterBot</div>
+    <div class="status" id="conn">DISCONNECTED</div>
+</div>
+
+<!-- BALANCE -->
+
+<div class="balance-card">
+
+    <div class="balance-title">
+        Total Balance
+    </div>
+
+    <div class="balance-amount" id="balance">
+        $100.00
+    </div>
+
+    <div class="profit" id="profit">
+        Profit Today: +$0.00
+    </div>
+
+</div>
+
+<!-- INFO GRID -->
+
+<div class="grid">
+
+    <div class="card">
+        <div class="card-title">BTC Price</div>
+        <div class="card-value" id="btc">Waiting...</div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">AI Signal</div>
+        <div class="card-value" id="signal">WAITING</div>
+    </div>
+
+</div>
+
+<!-- CHART -->
+
+<div class="chart-box">
+
+    <div class="card-title">
+        Live Market Chart
+    </div>
+
+    <canvas id="chart" height="150"></canvas>
+
+</div>
+
+<!-- BUTTONS -->
+
+<button class="btn start" onclick="connectWS()">
+START BOT
+</button>
+
+<button class="btn stop" onclick="disconnectWS()">
+STOP BOT
+</button>
+
+<br><br><br><br>
+
+<!-- FOOTER -->
+
+<div class="footer">
+    <div class="nav-item active">Home</div>
+    <div class="nav-item">Markets</div>
+    <div class="nav-item">Trades</div>
+    <div class="nav-item">Profile</div>
+</div>
+
+<script>
+
+let ws = null;
+
+let prices = [];
+
+let balance = 100;
+let profit = 0;
+
+/* =========================
+   CONNECT WS
+========================= */
+
+function connectWS(){
+
+    if(ws) ws.close();
+
+    ws = new WebSocket(
+        "wss://stream.binance.com:9443/ws/btcusdt@trade"
+    );
+
+    ws.onopen = () => {
+
+        document.getElementById("conn").innerText = "LIVE";
+    };
+
+    ws.onmessage = (event) => {
+
+        let data = JSON.parse(event.data);
+
+        let price = parseFloat(data.p);
+
+        document.getElementById("btc").innerText =
+            "$" + price.toFixed(2);
+
+        updateSignal(price);
+
+        updateChart(price);
+    };
+
+    ws.onclose = () => {
+
+        document.getElementById("conn").innerText =
+            "OFFLINE";
+    };
+}
+
+/* =========================
+   SIGNAL ENGINE
+========================= */
+
+function updateSignal(price){
+
+    prices.push(price);
+
+    if(prices.length > 15){
+        prices.shift();
+    }
+
+    if(prices.length < 5) return;
+
+    let up = 0;
+    let down = 0;
+
+    for(let i=1;i<prices.length;i++){
+
+        if(prices[i] > prices[i-1]){
+            up++;
+        }else{
+            down++;
+        }
+    }
+
+    let signal = "WAITING";
+
+    if(up > down){
+        signal = "BUY";
+        balance += Math.random() * 2;
+        profit += Math.random() * 2;
+    }
+
+    if(down > up){
+        signal = "SELL";
+        balance += Math.random();
+        profit += Math.random();
+    }
+
+    document.getElementById("signal").innerText =
+        signal;
+
+    document.getElementById("balance").innerText =
+        "$" + balance.toFixed(2);
+
+    document.getElementById("profit").innerText =
+        "Profit Today: +$" + profit.toFixed(2);
+}
+
+/* =========================
+   CHART
+========================= */
+
+function updateChart(price){
+
+    const canvas =
+        document.getElementById("chart");
+
+    const ctx = canvas.getContext("2d");
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    if(prices.length < 2) return;
+
+    let min = Math.min(...prices);
+    let max = Math.max(...prices);
+
+    let range = max - min || 1;
+
+    let step = canvas.width /
+        (prices.length - 1);
+
+    ctx.beginPath();
+
+    ctx.strokeStyle = "#00ff99";
+    ctx.lineWidth = 2;
+
+    prices.forEach((p,i)=>{
+
+        let x = i * step;
+
+        let y = canvas.height -
+            ((p - min) / range)
+            * canvas.height;
+
+        if(i===0){
+            ctx.moveTo(x,y);
+        }else{
+            ctx.lineTo(x,y);
+        }
+
+    });
+
+    ctx.stroke();
+}
+
+/* =========================
+   STOP
+========================= */
+
+function disconnectWS(){
+
+    if(ws){
+        ws.close();
+        ws = null;
+    }
+}
+
+</script>
+
+</body>
+</html>
