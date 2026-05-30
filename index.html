@@ -131,9 +131,9 @@ button{
 </div>
 
 <!-- FIREBASE MODERN SDK -->
-<script type="module">window.login = login;
-window.signUp = signUp;
-window.logout = logout;
+<script type="module">document.getElementById("loginBtn").addEventListener("click", login);
+document.getElementById("signupBtn").addEventListener("click", signUp);
+
 window.startBot = startBot;
 window.stopBot = stopBot;
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
