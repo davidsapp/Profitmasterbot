@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProfitMasterBot v10.6</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:#05060a;
+    color:white;
+}
+
+/* LOGIN */
+#authBox{
+    padding:20px;
+    text-align:center;
+}
+
+input{
+    padding:10px;
+    width:80%;
+    margin:5px;
+    border-radius:8px;
+    border:none;
+}
+
+/* DASHBOARD */
+.header{
+    display:flex;
+    justify-content:space-between;
+    padding:15px;
+    background:rgba(255,255,255,0.05);
+}
+
+.logo{
+    color:#00ff99;
+    font-weight:bold;
+    text-shadow:0 0 10px #00ff99;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
+    padding:10px;
+}
+
+.card{
+    background:rgba(255,255,255,0.05);
+    padding:15px;
+    border-radius:10px;
+    text-align:center;
+}
+
+.card p{
+    color:#00aaff;
+    font-size:18px;
+}
+
+.buttons{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    padding:10px;
+}
+
+button{
+    padding:10px 18px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+.start{background:#00ff99;}
+.stop{background:#ff0044;color:white;}
+.logout{background:#ffaa00;}
+
+.panel{
+    margin:10px;
+    padding:10px;
+    background:rgba(255,255,255,0.05);
+    border-radius:10px;
+    font-size:12px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="authBox">
+    <h2>ProfitMasterBot Login</h2>
+
+    <input id="email" placeholder="Email"><br>
+    <input id="password" type="password" placeholder="Password"><br>
+
+    <button onclick="signUp()">Sign Up</button>
+    <button onclick="login()">Login</button>
+
+    <p id="msg"></p>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" style="display:none;">
+
+<div class="header">
+    <div class="logo">ProfitMasterBot</div>
+    <div>
+        Status: <span id="status">Idle</span>
+        <button class="logout" onclick="logout()">Logout</button>
+    </div>
+</div>
+
+<div class="grid">
+    <div class="card"><h3>Balance</h3><p id="balance">$0</p></div>
+    <div class="card"><h3>Profit</h3><p id="profit">$0</p></div>
+    <div class="card"><h3>Accuracy</h3><p id="accuracy">0%</p></div>
+    <div class="card"><h3>Bot</h3><p id="bot">Stopped</p></div>
+</div>
+
+<div class="buttons">
+    <button class="start" onclick="startBot()">START</button>
+    <button class="stop" onclick="stopBot()">STOP</button>
+</div>
+
+<div class="panel" id="log"></div>
+
+</div>
+
+<!-- FIREBASE MODERN SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { 
+    getAuth,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    onAuthStateChanged,
+    signOut
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+import {
+    getFirestore,
+    doc,
+    setDoc,
+    getDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_BUCKET",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
+
+// INIT
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// STATE
+let running = false;
+let balance = 0;
+let profit = 0;
+let accuracy = 0;
+let loop = null;
+
+// UI
+const authBox = document.getElementById("authBox");
+const dashboard = document.getElementById("dashboard");
+
+const balanceEl = document.getElementById("balance");
+const profitEl = document.getElementById("profit");
+const accuracyEl = document.getElementById("accuracy");
+const botEl = document.getElementById("bot");
+const statusEl = document.getElementById("status");
+const logEl = document.getElementById("log");
+
+// AUTH
+window.signUp = async function(){
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    try{
+        await createUserWithEmailAndPassword(auth, email, password);
+    }catch(e){
+        document.getElementById("msg").innerText = e.message;
+    }
+}
+
+window.login = async function(){
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    try{
+        await signInWithEmailAndPassword(auth, email, password);
+    }catch(e){
+        document.getElementById("msg").innerText = e.message;
+    }
+}
+
+window.logout = async function(){
+    await signOut(auth);
+}
+
+// AUTH STATE
+onAuthStateChanged(auth, async (user)=>{
+    if(user){
+        authBox.style.display = "none";
+        dashboard.style.display = "block";
+        loadData(user.uid);
+    }else{
+        authBox.style.display = "block";
+        dashboard.style.display = "none";
+    }
+});
+
+// BOT
+window.startBot = function(){
+    if(running) return;
+
+    running = true;
+    botEl.innerText = "Running";
+    statusEl.innerText = "Active";
+
+    loop = setInterval(runBot, 2000);
+}
+
+window.stopBot = function(){
+    running = false;
+    botEl.innerText = "Stopped";
+    statusEl.innerText = "Idle";
+
+    clearInterval(loop);
+}
+
+// ENGINE
+function runBot(){
+    let r = Math.random();
+
+    if(r > 0.5){
+        let gain = Math.random()*5;
+        balance += gain;
+        profit += gain;
+    }else{
+        let loss = Math.random()*3;
+        balance -= loss;
+        profit -= loss;
+    }
+
+    accuracy = Math.random()*100;
+
+    updateUI();
+    saveData();
+}
+
+// UI
+function updateUI(){
+    balanceEl.innerText = "$" + balance.toFixed(2);
+    profitEl.innerText = "$" + profit.toFixed(2);
+    accuracyEl.innerText = accuracy.toFixed(1) + "%";
+}
+
+// FIRESTORE SAVE
+async function saveData(){
+    const user = auth.currentUser;
+    if(!user) return;
+
+    await setDoc(doc(db, "users", user.uid), {
+        balance,
+        profit,
+        accuracy,
+        running
+    });
+}
+
+// FIRESTORE LOAD
+async function loadData(uid){
+    const snap = await getDoc(doc(db, "users", uid));
+
+    if(snap.exists()){
+        const data = snap.data();
+
+        balance = data.balance || 0;
+        profit = data.profit || 0;
+        accuracy = data.accuracy || 0;
+
+        updateUI();
+    }
+}
+</script>
+
+</body>
+</html>
