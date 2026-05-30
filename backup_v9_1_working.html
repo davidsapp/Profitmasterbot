@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProfitMasterBot v9 SAFE UPDATED</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:#050816;
+    color:white;
+}
+
+/* HEADER */
+.header{
+    display:flex;
+    justify-content:space-between;
+    padding:15px;
+    background:#0b1024;
+}
+.logo{
+    color:#00ff99;
+    font-weight:bold;
+}
+
+/* TABS */
+.tabbar{
+    display:flex;
+    gap:10px;
+    padding:10px;
+    background:#0b1024;
+}
+
+.tab{
+    padding:8px 12px;
+    background:#11182f;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:13px;
+}
+.tab.active{
+    background:#00ff99;
+    color:black;
+}
+
+/* SECTIONS */
+.section{
+    display:none;
+    padding:15px;
+}
+.section.active{
+    display:block;
+}
+
+/* CARDS */
+.card{
+    background:#11182f;
+    padding:15px;
+    border-radius:12px;
+    margin-bottom:15px;
+}
+
+/* INPUT */
+input{
+    width:100%;
+    padding:10px;
+    margin-top:8px;
+    border-radius:8px;
+    border:none;
+}
+
+/* BUTTON */
+button{
+    padding:10px;
+    background:#00ff99;
+    border:none;
+    border-radius:8px;
+    margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <div class="logo">ProfitMasterBot v9.1 SAFE</div>
+</div>
+
+<div class="tabbar">
+    <div class="tab active" onclick="show('dash')">Dashboard</div>
+    <div class="tab" onclick="show('convert')">Converter</div>
+    <div class="tab" onclick="show('mpesa')">M-Pesa</div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dash" class="section active">
+    <div class="card">
+        <h3>AI Dashboard</h3>
+        <h2 id="price">$0</h2>
+        <div id="signal">WAIT</div>
+    </div>
+</div>
+
+<!-- CONVERTER -->
+<div id="convert" class="section">
+    <div class="card">
+        <h3>USD ↔ KSH Converter</h3>
+
+        <input type="number" id="usd" placeholder="Enter USD">
+
+        <button onclick="convert()">Convert</button>
+
+        <h3 id="result">KES: 0</h3>
+        <p id="rate">Loading rate...</p>
+    </div>
+</div>
+
+<!-- MPESA -->
+<div id="mpesa" class="section">
+    <div class="card">
+        <h3>M-Pesa Admin</h3>
+
+        <p><b>Till:</b> 9210444</p>
+
+        <input id="name" placeholder="Customer Name">
+        <input id="amount" type="number" placeholder="Amount">
+
+        <button onclick="addPayment()">Add</button>
+
+        <h4>Total: KES <span id="total">0</span></h4>
+
+        <table border="1" width="100%">
+            <tr>
+                <th>Name</th>
+                <th>Amount</th>
+            </tr>
+            <tbody id="list"></tbody>
+        </table>
+    </div>
+</div>
+
+---
+
+<!-- FIREBASE (CONNECTED PROPERLY) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAl9mVCRlylurCPyT6fjW0sGIajc0v1QLk",
+  authDomain: "profitmasterbot-d9d9c.firebaseapp.com",
+  projectId: "profitmasterbot-d9d9c",
+  storageBucket: "profitmasterbot-d9d9c.firebasestorage.app",
+  messagingSenderId: "531770330234",
+  appId: "1:531770330234:web:ac9696195b469b965fffc3"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+console.log("Firebase connected successfully");
+</script>
+
+<script>
+
+/* TAB SWITCH */
+function show(id){
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+/* BTC PRICE */
+let ws = new WebSocket("wss://stream.binance.com:9443/ws/btcusdt@trade");
+
+ws.onmessage = (e)=>{
+    let d = JSON.parse(e.data);
+    document.getElementById("price").innerText = "$" + parseFloat(d.p).toFixed(2);
+};
+
+/* USD/KSH */
+let rate = 130;
+
+async function loadRate(){
+    try{
+        let res = await fetch("https://api.exchangerate.host/latest?base=USD&symbols=KES");
+        let data = await res.json();
+
+        if(data && data.rates){
+            rate = data.rates.KES;
+        }
+
+        document.getElementById("rate").innerText =
+        "1 USD = " + rate.toFixed(2) + " KES";
+
+    }catch(err){
+        document.getElementById("rate").innerText =
+        "Offline mode (backup rate)";
+    }
+}
+loadRate();
+
+function convert(){
+    let usd = document.getElementById("usd").value;
+    document.getElementById("result").innerText =
+    "KES: " + (usd * rate).toFixed(2);
+}
+
+/* MPESA LOCAL STORAGE (FOR NOW) */
+let payments = JSON.parse(localStorage.getItem("mpesa")) || [];
+
+function addPayment(){
+    let name = document.getElementById("name").value;
+    let amount = parseFloat(document.getElementById("amount").value);
+
+    payments.push({name, amount});
+    localStorage.setItem("mpesa", JSON.stringify(payments));
+
+    render();
+}
+
+function render(){
+    let list = document.getElementById("list");
+    let total = 0;
+
+    list.innerHTML = "";
+
+    payments.forEach(p=>{
+        total += p.amount;
+        list.innerHTML += `<tr><td>${p.name}</td><td>${p.amount}</td></tr>`;
+    });
+
+    document.getElementById("total").innerText = total;
+}
+
+render();
+
+</script>
+
+</body>
+</html>
