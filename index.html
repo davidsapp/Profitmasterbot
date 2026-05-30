@@ -148,15 +148,23 @@ import {
     getDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSy...",
-  authDomain: "your-project.firebaseapp.com",
-  projectId: "your-project",
-  storageBucket: "your-project.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:123456789:web:..."
+  apiKey: "AIzaSyAl9mVCRlylurCPyT6fjW0sGIajc0v1QLk",
+  authDomain: "profitmasterbot-d9d9c.firebaseapp.com",
+  projectId: "profitmasterbot-d9d9c",
+  storageBucket: "profitmasterbot-d9d9c.firebasestorage.app",
+  messagingSenderId: "531770330234",
+  appId: "1:531770330234:web:ac9696195b469b965fffc3"
 };
 
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
 // INIT
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
