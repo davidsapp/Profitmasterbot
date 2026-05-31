@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ProfitMasterBot v11.1 Stable</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial, sans-serif;
+}
+
+body{
+background:#050816;
+color:white;
+min-height:100vh;
+}
+
+/* LOGIN */
+
+#authBox{
+width:100%;
+max-width:400px;
+margin:auto;
+padding:25px;
+margin-top:50px;
+background:rgba(255,255,255,0.05);
+border-radius:15px;
+backdrop-filter:blur(10px);
+}
+
+.logo{
+text-align:center;
+font-size:32px;
+font-weight:bold;
+color:#00ff99;
+margin-bottom:10px;
+}
+
+.subtitle{
+text-align:center;
+margin-bottom:25px;
+opacity:.8;
+}
+
+input{
+width:100%;
+padding:12px;
+margin-top:10px;
+border:none;
+border-radius:10px;
+background:#10182b;
+color:white;
+}
+
+button{
+width:100%;
+padding:12px;
+margin-top:12px;
+border:none;
+border-radius:10px;
+background:#00ff99;
+color:black;
+font-weight:bold;
+cursor:pointer;
+}
+
+button:hover{
+opacity:.9;
+}
+
+.linkBtn{
+background:transparent;
+color:#00ff99;
+}
+
+#msg{
+margin-top:10px;
+text-align:center;
+color:#ff8080;
+}
+
+.powered{
+text-align:center;
+margin-top:20px;
+font-size:12px;
+opacity:.7;
+}
+
+/* DASHBOARD */
+
+#dashboard{
+display:none;
+padding-bottom:100px;
+}
+
+.header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:15px;
+background:#081225;
+position:sticky;
+top:0;
+z-index:100;
+}
+
+.header h2{
+color:#00ff99;
+}
+
+.logoutBtn{
+width:auto;
+padding:10px 15px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+gap:15px;
+padding:15px;
+}
+
+.card{
+background:#0f172a;
+border-radius:15px;
+padding:20px;
+min-height:130px;
+}
+
+.card h3{
+margin-bottom:10px;
+color:#00ff99;
+}
+
+.status-online{
+color:#00ff99;
+font-weight:bold;
+}
+
+.status-offline{
+color:red;
+font-weight:bold;
+}
+
+.shareBox{
+padding:15px;
+}
+
+.shareBtn{
+background:#00ff99;
+color:black;
+}
+
+.footer{
+text-align:center;
+padding:20px;
+opacity:.7;
+font-size:12px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="authBox">
+
+<div class="logo">
+ProfitMasterBot
+</div>
+
+<div class="subtitle">
+Secure Trading Dashboard
+</div>
+
+<input
+id="email"
+type="email"
+placeholder="Email Address">
+
+<input
+id="password"
+type="password"
+placeholder="Password">
+
+<button id="loginBtn">
+Login
+</button>
+
+<button
+id="resetBtn"
+class="linkBtn">
+Forgot Password?
+</button>
+
+<div id="msg"></div>
+
+<div class="powered">
+Powered by David Maina
+</div>
+
+</div>
+
+<div id="dashboard">
+
+<div class="header">
+<h2>ProfitMasterBot</h2>
+
+<button
+id="logoutBtn"
+class="logoutBtn">
+Logout
+</button>
+</div>
+
+<div class="grid">
+
+<div class="card">
+<h3>Connection Status</h3>
+<p id="connectionStatus"
+class="status-online">
+Connected
+</p>
+</div>
+
+<div class="card">
+<h3>M-Pesa</h3>
+<p>Integration Ready</p>
+<p>Awaiting Configuration</p>
+</div>
+
+<div class="card">
+<h3>Binance</h3>
+<p>Exchange Module Ready</p>
+<p>Awaiting API Connection</p>
+</div>
+
+<div class="card">
+<h3>Deriv</h3>
+<p>Broker Module Ready</p>
+<p>Awaiting API Connection</p>
+</di
+
+<button
+id="shareBtn"
+class="shareBtn">
+Share App
+</button>
+
+</div>
+
+<div class="footer">
+ProfitMasterBot v11.1 Stable
+</div>
+
+</div>
